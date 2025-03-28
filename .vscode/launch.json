@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SplititApplication<splitit>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "es.upm.dit.isst.splitit.SplititApplication",
+            "projectName": "splitit",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
