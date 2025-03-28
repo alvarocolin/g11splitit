@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Usuario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1>Bienvenido, <span th:text="${usuario.nombre}">Usuario</span></h1>
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <h2>Mis Grupos</h2>
+                <div class="list-group">
+                    <!-- Se itera sobre la lista de grupos y cada uno se muestra como un enlace -->
+                    <a th:each="grupo : ${grupos}" th:href="@{'/grupos/' + ${grupo.idGrupo}}" th:text="${grupo.nombre}"
+                        class="list-group-item list-group-item-action">
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h2>Acciones</h2>
+                <!-- Botón que redirige a la página para crear un grupo -->
+                <a href="/grupos/crear" class="btn btn-primary btn-block">Crear Nuevo Grupo</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
