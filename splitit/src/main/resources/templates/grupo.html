@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Detalles del Grupo</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <!-- Título del grupo -->
+        <div class="mb-4">
+            <h1 class="display-5" th:text="'Grupo: ' + ${grupo.nombre}">Nombre del Grupo</h1>
+        </div>
+
+        <!-- Sección de Participantes -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Participantes</span>
+                    <a th:href="@{/grupos/{id}/participantes/nuevo(id=${grupo.idGrupo})}" class="btn btn-light btn-sm">
+                        Añadir Participante
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item" th:each="participante : ${grupo.miembros}"
+                        th:text="${participante.nombre} + ' (' + participante.email + ')'">
+                        Participante
+                    </li>
+                    <li class="list-group-item" th:if="${#lists.isEmpty(grupo.miembros)}">
+                        No hay participantes.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sección de Gastos -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Gastos del Grupo</span>
+                    <a th:href="@{/gastos/nuevo(grupoId=${grupo.idGrupo})}" class="btn btn-light btn-sm">
+                        Añadir Gasto
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Cantidad</th>
+                            <th>Pagador</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="gasto : ${gastos}">
+                            <td th:text="${gasto.concepto}">Concepto</td>
+                            <td th:text="${gasto.cantidad}">Cantidad</td>
+                            <td th:text="${gasto.pagador.nombre}">Pagador</td>
+                            <td th:text="${#dates.format(gasto.fecha, 'dd/MM/yyyy')}">Fecha</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(gastos)}">
+                            <td colspan="4" class="text-center">No se han registrado gastos.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección de Balance -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                Balance del Grupo
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Participante</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${balanceMap}">
+                            <td th:text="${entry.key.nombre}">Nombre del participante</td>
+                            <td th:text="${entry.value}">Balance</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(balanceMap)}">
+                            <td colspan="2" class="text-center">No se ha calculado ningún balance.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Botón para volver al dashboard -->
+        <div class="text-right">
+            <a href="/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS y dependencias (opcional) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>

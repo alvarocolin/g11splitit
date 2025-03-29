@@ -15,13 +15,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class SecurityConfig {
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        // Crea un usuario con username "alvarocolin" y password "123" y rol USER
-        UserDetails user = User.withUsername("alvarocolin")
-                .password("123")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
+public UserDetailsService userDetailsService() {
+    UserDetails user1 = User.withUsername("alvaro@example.com")
+            .password("123")
+            .roles("USER")
+            .build();
+    UserDetails user2 = User.withUsername("roberto@example.com")
+            .password("123")
+            .roles("USER")
+            .build();
+    UserDetails user3 = User.withUsername("alejo@example.com")
+            .password("123")
+            .roles("USER")
+            .build();
+    UserDetails user4 = User.withUsername("luis@example.com")
+            .password("123")
+            .roles("USER")
+            .build();
+    return new InMemoryUserDetailsManager(user1, user2, user3, user4);
+}
+
 
     @SuppressWarnings("deprecation")
     @Bean
@@ -35,6 +48,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/login", "/css/**", "/js/**", "/h2-console/**").permitAll()
+                .requestMatchers("/dashboard").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

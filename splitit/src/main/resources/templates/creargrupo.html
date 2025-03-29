@@ -4,21 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Crear Grupo</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
 <body>
-    <div class="container mt-4">
-        <h1>Crear Nuevo Grupo</h1>
-        <form th:action="@{/grupos}" th:object="${grupo}" method="post">
-            <div class="form-group">
-                <label for="nombre">Nombre del Grupo</label>
-                <input type="text" th:field="*{nombre}" class="form-control" id="nombre"
-                    placeholder="Ingrese nombre del grupo" required>
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h1 class="h4 mb-0">Crear Nuevo Grupo</h1>
             </div>
-            <button type="submit" class="btn btn-primary">Crear Grupo</button>
-        </form>
+            <div class="card-body">
+                <!-- El formulario envía una solicitud POST a /grupos/guardar -->
+                <form th:action="@{/grupos/guardar}" th:object="${grupo}" method="post">
+                    <div class="form-group">
+                        <label for="nombre">Nombre del Grupo</label>
+                        <input type="text" th:field="*{nombre}" class="form-control" id="nombre"
+                            placeholder="Ingrese nombre del grupo" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Grupo</button>
+                </form>
+            </div>
+        </div>
     </div>
+    <!-- Bootstrap JS y dependencias (opcional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>

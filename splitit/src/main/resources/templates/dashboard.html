@@ -4,29 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard de Usuario</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
 <body>
-    <div class="container mt-4">
-        <h1>Bienvenido, <span th:text="${usuario.nombre}">Usuario</span></h1>
-        <div class="row mt-4">
-            <div class="col-md-8">
-                <h2>Mis Grupos</h2>
-                <div class="list-group">
-                    <!-- Se itera sobre la lista de grupos y cada uno se muestra como un enlace -->
-                    <a th:each="grupo : ${grupos}" th:href="@{'/grupos/' + ${grupo.idGrupo}}" th:text="${grupo.nombre}"
-                        class="list-group-item list-group-item-action">
-                    </a>
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h1 class="h4 mb-0">Bienvenido, <span th:text="${usuario.nombre}">Usuario</span></h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Sección de Grupos -->
+                    <div class="col-md-8">
+                        <h2 class="h5">Mis Grupos</h2>
+                        <div class="list-group">
+                            <a th:each="grupo : ${grupos}" th:href="@{'/grupos/' + ${grupo.idGrupo}}"
+                                th:text="${grupo.nombre}" class="list-group-item list-group-item-action">
+                            </a>
+                            <div th:if="${#lists.isEmpty(grupos)}" class="alert alert-info mt-2">
+                                No perteneces a ningún grupo.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sección de Acciones -->
+                    <div class="col-md-4">
+                        <h2 class="h5">Acciones</h2>
+                        <a href="/grupos/crear" class="btn btn-primary btn-block mb-2">Crear Nuevo Grupo</a>
+                        <!-- Puedes agregar más botones de acción según necesites -->
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <h2>Acciones</h2>
-                <!-- Botón que redirige a la página para crear un grupo -->
-                <a href="/grupos/crear" class="btn btn-primary btn-block">Crear Nuevo Grupo</a>
+            <div class="card-footer text-right">
+                <a href="/dashboard" class="btn btn-secondary">Actualizar Dashboard</a>
             </div>
         </div>
     </div>
+    <!-- Bootstrap JS y dependencias (opcional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>
