@@ -3,18 +3,18 @@ package es.upm.dit.isst.splitit.controller;
 import es.upm.dit.isst.splitit.model.Gasto;
 import es.upm.dit.isst.splitit.model.Participacion;
 import es.upm.dit.isst.splitit.model.Usuario;
+import es.upm.dit.isst.splitit.model.Grupo;
 import es.upm.dit.isst.splitit.repository.GastoRepository;
 import es.upm.dit.isst.splitit.repository.ParticipacionRepository;
 import es.upm.dit.isst.splitit.repository.UsuarioRepository;
+import es.upm.dit.isst.splitit.repository.GrupoRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/participaciones")
@@ -29,14 +29,9 @@ public class ParticipacionController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    /**
-     * Crea participaciones para un gasto dado.
-     * La petición recibe una lista de objetos Participacion.
-     * - Si todas las cantidades vienen en null, se calcula una división equitativa.
-     * - Si alguna cantidad es no nula se asume modo manual y se valida que:
-     * • Todas las participaciones tengan un valor
-     * • La suma de las cantidades coincida con el total del gasto.
-     */
+    @Autowired
+    private GrupoRepository grupoRepository;
+
     @PostMapping("/gastos/{gastoId}")
     public ResponseEntity<?> addParticipacionesToGasto(@PathVariable Long gastoId,
             @RequestBody List<Participacion> participaciones) {
@@ -46,67 +41,132 @@ public class ParticipacionController {
         }
         Gasto gasto = gastoOpt.get();
 
-        // Determinar si es modo manual (si al menos una participación tiene cantidad no
-        // nula)
         boolean manual = participaciones.stream().anyMatch(p -> p.getCantidad() != null);
 
         if (manual) {
-            double suma = 0.0;
-            for (Participacion p : participaciones) {
-                if (p.getCantidad() == null) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("En modo manual, todas las participaciones deben tener cantidad definida.");
-                }
-                suma += p.getCantidad();
+            double suma = participaciones.stream()
+                    .mapToDouble(p -> Optional.ofNullable(p.getCantidad()).orElse(0.0))
+                    .sum();
+
+            if (participaciones.stream().anyMatch(p -> p.getCantidad() == null)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Todos los participantes deben tener una cantidad asignada");
             }
+
             if (Math.abs(suma - gasto.getCantidad()) > 0.01) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("La suma de las cantidades (" + suma + ") no coincide con el total del gasto ("
-                                + gasto.getCantidad() + ").");
+                        .body("La suma de las cantidades no coincide con el gasto total");
             }
+
         } else {
-            // Si todas las participaciones vienen con cantidad null, se calcula la cuota
-            // equitativa.
-            if (participaciones.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Debe haber al menos un participante.");
-            }
-            double cuota = gasto.getCantidad() / participaciones.size();
-            for (Participacion p : participaciones) {
-                p.setCantidad(cuota);
-            }
+            double cantidadEquitativa = gasto.getCantidad() / participaciones.size();
+            participaciones.forEach(p -> p.setCantidad(cantidadEquitativa));
         }
 
-        // Asignar el gasto a cada participación y, opcionalmente, cargar el usuario
-        // completo si solo se envía el ID.
-        List<Participacion> participacionesGuardadas = new ArrayList<>();
-        for (Participacion p : participaciones) {
-            // Si el objeto Usuario viene incompleto (por ejemplo, solo con el ID), se puede
-            // cargar el objeto completo:
-            if (p.getUsuario() != null && p.getUsuario().getIdUsuario() != null) {
-                Optional<Usuario> usuarioOpt = usuarioRepository.findById(p.getUsuario().getIdUsuario());
-                if (!usuarioOpt.isPresent()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("Usuario con ID " + p.getUsuario().getIdUsuario() + " no encontrado.");
-                }
-                p.setUsuario(usuarioOpt.get());
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Cada participación debe incluir el usuario con su ID.");
-            }
-            p.setGasto(gasto);
-            participacionesGuardadas.add(p);
-        }
-
-        participacionRepository.saveAll(participacionesGuardadas);
-        return ResponseEntity.status(HttpStatus.CREATED).body(participacionesGuardadas);
+        participaciones.forEach(p -> p.setGasto(gasto));
+        participacionRepository.saveAll(participaciones);
+        return ResponseEntity.ok("Participaciones añadidas");
     }
 
-    /**
-     * Obtiene las participaciones asociadas a un gasto.
-     */
-    @GetMapping("/gastos/{gastoId}")
-    public ResponseEntity<List<Participacion>> getParticipacionesByGasto(@PathVariable Long idGasto) {
-        List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(idGasto);
-        return ResponseEntity.ok(participaciones);
+    @GetMapping("/balance/grupo/{grupoId}")
+    public ResponseEntity<?> getBalancePorGrupo(@PathVariable Long grupoId) {
+        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
+        if (!grupoOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado");
+        }
+        Grupo grupo = grupoOpt.get();
+
+        List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
+
+        Map<Long, Double> totalPagadoPorUsuario = new HashMap<>();
+        Map<Long, Double> totalDebePorUsuario = new HashMap<>();
+        Map<Long, Map<Long, Double>> deudasEntreUsuarios = new HashMap<>();
+
+        for (Gasto gasto : gastosGrupo) {
+            Usuario pagador = gasto.getPagador();
+            Long idPagador = pagador.getIdUsuario();
+            totalPagadoPorUsuario.put(idPagador,
+                    totalPagadoPorUsuario.getOrDefault(idPagador, 0.0) + gasto.getCantidad());
+
+            List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(gasto.getIdGasto());
+
+            for (Participacion p : participaciones) {
+                Long idParticipante = p.getUsuario().getIdUsuario();
+                double cantidad = p.getCantidad();
+
+                if (!idParticipante.equals(idPagador)) {
+                    totalDebePorUsuario.put(idParticipante,
+                            totalDebePorUsuario.getOrDefault(idParticipante, 0.0) + cantidad);
+
+                    deudasEntreUsuarios
+                            .computeIfAbsent(idParticipante, k -> new HashMap<>())
+                            .put(idPagador,
+                                    deudasEntreUsuarios.get(idParticipante).getOrDefault(idPagador, 0.0) + cantidad);
+                }
+            }
+        }
+
+        Set<Long> usuarios = new HashSet<>();
+        usuarios.addAll(totalPagadoPorUsuario.keySet());
+        usuarios.addAll(totalDebePorUsuario.keySet());
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Long idUsuario : usuarios) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+            if (usuarioOpt.isPresent()) {
+                Usuario usuario = usuarioOpt.get();
+                double pagado = totalPagadoPorUsuario.getOrDefault(idUsuario, 0.0);
+                double debe = totalDebePorUsuario.getOrDefault(idUsuario, 0.0);
+                double balance = pagado - debe;
+
+                Map<String, Object> datoUsuario = new HashMap<>();
+                datoUsuario.put("usuario", usuario.getNombre());
+                datoUsuario.put("pagado", pagado);
+                datoUsuario.put("debe", debe);
+                datoUsuario.put("balance", balance);
+
+                resultado.add(datoUsuario);
+            }
+        }
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @GetMapping("/deudas/grupo/{grupoId}")
+    public ResponseEntity<?> getDeudasEntreUsuarios(@PathVariable Long grupoId) {
+        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
+        if (!grupoOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado");
+        }
+        Grupo grupo = grupoOpt.get();
+        List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
+        Map<Long, Map<Long, Double>> deudas = new HashMap<>();
+
+        for (Gasto gasto : gastosGrupo) {
+            Long pagadorId = gasto.getPagador().getIdUsuario();
+            List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(gasto.getIdGasto());
+            for (Participacion p : participaciones) {
+                Long participanteId = p.getUsuario().getIdUsuario();
+                double cantidad = p.getCantidad();
+
+                if (!participanteId.equals(pagadorId)) {
+                    deudas.computeIfAbsent(participanteId, k -> new HashMap<>())
+                            .put(pagadorId, deudas.get(participanteId).getOrDefault(pagadorId, 0.0) + cantidad);
+                }
+            }
+        }
+
+        Map<String, Map<String, Double>> resultado = new HashMap<>();
+        for (Long deudorId : deudas.keySet()) {
+            String deudorNombre = usuarioRepository.findById(deudorId).map(Usuario::getNombre).orElse("?");
+            resultado.putIfAbsent(deudorNombre, new HashMap<>());
+            for (Long acreedorId : deudas.get(deudorId).keySet()) {
+                String acreedorNombre = usuarioRepository.findById(acreedorId).map(Usuario::getNombre).orElse("?");
+                resultado.get(deudorNombre).put(acreedorNombre, deudas.get(deudorId).get(acreedorId));
+            }
+        }
+
+        return ResponseEntity.ok(resultado);
     }
 }

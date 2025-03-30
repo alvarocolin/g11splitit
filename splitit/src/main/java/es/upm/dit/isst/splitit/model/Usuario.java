@@ -27,7 +27,7 @@ public class Usuario {
     @ManyToMany(mappedBy = "miembros")
     private Set<Grupo> grupos;
 
-    // Getters y setters
+    // Getterrs y setters
     public Long getIdUsuario() {
         return idUsuario;
     }

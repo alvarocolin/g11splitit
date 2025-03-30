@@ -1,66 +1,91 @@
 package es.upm.dit.isst.splitit.controller;
 
 import es.upm.dit.isst.splitit.model.Gasto;
+import es.upm.dit.isst.splitit.model.Participacion;
+import es.upm.dit.isst.splitit.model.Usuario;
+import es.upm.dit.isst.splitit.model.Grupo;
 import es.upm.dit.isst.splitit.repository.GastoRepository;
+import es.upm.dit.isst.splitit.repository.ParticipacionRepository;
+import es.upm.dit.isst.splitit.repository.UsuarioRepository;
+import es.upm.dit.isst.splitit.repository.GrupoRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-@RestController
+@Controller
 @RequestMapping("/gastos")
 public class GastoController {
 
     @Autowired
     private GastoRepository gastoRepository;
 
-    // Obtener todos los gastos
-    @GetMapping
-    public List<Gasto> getAllGastos() {
-        List<Gasto> gastos = new ArrayList<>();
-        gastoRepository.findAll().forEach(gastos::add);
-        return gastos;
+    @Autowired
+    private GrupoRepository grupoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ParticipacionRepository participacionRepository;
+
+    @GetMapping("/nuevo-formulario")
+    public String mostrarFormularioNuevoGasto(@RequestParam Long grupoId, @RequestParam Long usuarioId, Map<String, Object> model) {
+        Grupo grupo = grupoRepository.findById(grupoId).orElseThrow();
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
+
+        model.put("grupo", grupo);
+        model.put("usuario", usuario);
+        return "addgasto";
     }
 
-    // Crear un nuevo gasto
-    @PostMapping
-    public ResponseEntity<Gasto> createGasto(@RequestBody Gasto gasto) {
-        Gasto savedGasto = gastoRepository.save(gasto);
-        return new ResponseEntity<>(savedGasto, HttpStatus.CREATED);
-    }
+    @PostMapping("/nuevo")
+    public String guardarGasto(
+            @RequestParam String concepto,
+            @RequestParam double cantidad,
+            @RequestParam Long grupoId,
+            @RequestParam Long pagadorId,
+            @RequestParam Map<String, String> params,
+            RedirectAttributes redirectAttributes) {
 
-    // Obtener un gasto por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Gasto> getGastoById(@PathVariable Long id) {
-        Optional<Gasto> gasto = gastoRepository.findById(id);
-        return gasto.map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        Grupo grupo = grupoRepository.findById(grupoId).orElseThrow();
+        Usuario pagador = usuarioRepository.findById(pagadorId).orElseThrow();
 
-    // Actualizar un gasto existente
-    @PutMapping("/{id}")
-    public ResponseEntity<Gasto> updateGasto(@PathVariable Long id, @RequestBody Gasto gastoDetails) {
-        return gastoRepository.findById(id).map(gasto -> {
-            gasto.setConcepto(gastoDetails.getConcepto());
-            gasto.setCantidad(gastoDetails.getCantidad());
-            gasto.setGrupo(gastoDetails.getGrupo());
-            gasto.setPagador(gastoDetails.getPagador());
-            Gasto updatedGasto = gastoRepository.save(gasto);
-            return ResponseEntity.ok(updatedGasto);
-        }).orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        Gasto gasto = new Gasto();
+        gasto.setConcepto(concepto);
+        gasto.setCantidad(cantidad);
+        gasto.setGrupo(grupo);
+        gasto.setPagador(pagador);
+        gastoRepository.save(gasto);
 
-    // Eliminar un gasto
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGasto(@PathVariable Long id) {
-        if (!gastoRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        // Procesar participaciones
+        List<Participacion> participaciones = new ArrayList<>();
+
+        for (String key : params.keySet()) {
+            if (key.startsWith("participaciones[") && key.endsWith("].incluido")) {
+                String userIdStr = key.substring("participaciones[".length(), key.indexOf("].incluido"));
+                Long userId = Long.parseLong(userIdStr);
+
+                String cantidadKey = "participaciones[" + userId + "].cantidad";
+                if (params.containsKey(cantidadKey)) {
+                    double cantidadUsuario = Double.parseDouble(params.get(cantidadKey));
+                    Usuario usuario = usuarioRepository.findById(userId).orElseThrow();
+
+                    Participacion p = new Participacion();
+                    p.setUsuario(usuario);
+                    p.setGasto(gasto);
+                    p.setCantidad(cantidadUsuario);
+
+                    participaciones.add(p);
+                }
+            }
         }
-        gastoRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+
+        participacionRepository.saveAll(participaciones);
+
+        return "redirect:/grupos/" + grupoId;
     }
 }
