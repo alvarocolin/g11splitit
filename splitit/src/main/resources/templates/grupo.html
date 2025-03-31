@@ -8,18 +8,16 @@
 </head>
 
 <body>
-    <!-- Barra superior -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
-        <a class="navbar-brand font-weight-bold">Split.it</a>
-        <form th:action="@{/logout}" method="post" class="form-inline my-2 my-lg-0">
-            <button class="btn btn-outline-danger my-2 my-sm-0" type="submit">Cerrar sesión</button>
-        </form>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="container mt-5">
+        <!-- Encabezado con nombre del grupo y opciones -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="display-5" th:text="'Grupo: ' + ${grupo.nombre}">Nombre del Grupo</h1>
-            <a href="/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
+            <div>
+                <a href="/dashboard" class="btn btn-outline-secondary mr-2">Volver al Dashboard</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                </form>
+            </div>
         </div>
 
         <!-- Participantes -->
@@ -33,7 +31,7 @@
             <div class="card-body">
                 <ul class="list-group">
                     <li class="list-group-item" th:each="p : ${grupo.miembros}"
-                        th:text="${p.nombre} + ' (' + p.email + ')'">Participante</li>
+                        th:text="${p.nombre}">Participante</li>
                     <li class="list-group-item" th:if="${#lists.isEmpty(grupo.miembros)}">No hay participantes.</li>
                 </ul>
             </div>
@@ -72,9 +70,7 @@
 
         <!-- Balance -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">
-                Balance del Grupo
-            </div>
+            <div class="card-header bg-info text-white">Balance del Grupo</div>
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
@@ -96,9 +92,7 @@
 
         <!-- Deudas Detalladas -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-warning text-dark">
-                Deudas entre Participantes
-            </div>
+            <div class="card-header bg-warning text-dark">Deudas entre Participantes</div>
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
@@ -117,7 +111,7 @@
             </div>
         </div>
 
-        <!-- Script de carga balance y deudas -->
+        <!-- Script: carga dinámica balance y deudas -->
         <script th:inline="javascript">
             const grupoId = [[${ grupo.idGrupo }]];
 

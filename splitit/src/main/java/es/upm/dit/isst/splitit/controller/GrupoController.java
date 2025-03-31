@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import es.upm.dit.isst.splitit.model.Grupo;
 import es.upm.dit.isst.splitit.model.Usuario;
@@ -139,5 +140,29 @@ public class GrupoController {
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo o Usuario no encontrado");
         }
+    }
+    @PostMapping("/{grupoId}/add-email")
+    public String addUsuarioToGrupoPorEmail(
+            @PathVariable Long grupoId,
+            @RequestParam String usuarioEmail,
+            RedirectAttributes redirectAttributes) {
+
+        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
+        Usuario usuario = usuarioRepository.findByEmail(usuarioEmail);
+
+        if (grupoOpt.isPresent() && usuario != null) {
+            Grupo grupo = grupoOpt.get();
+            if (!grupo.getMiembros().contains(usuario)) {
+                grupo.getMiembros().add(usuario);
+                grupoRepository.save(grupo);
+                redirectAttributes.addFlashAttribute("success", "Usuario añadido correctamente.");
+            } else {
+                redirectAttributes.addFlashAttribute("warning", "Este usuario ya pertenece al grupo.");
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado con ese email.");
+        }
+
+        return "redirect:/grupos/" + grupoId + "/participantes/nuevo";
     }
 }

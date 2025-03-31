@@ -75,7 +75,6 @@ public class GastoController {
                     double cantidadUsuario = Double.parseDouble(params.get(cantidadKey));
                     Usuario usuario = usuarioRepository.findById(userId).orElseThrow();
 
-                    // Solo añadir si NO es el pagador
                     if (!usuario.getIdUsuario().equals(pagadorId)) {
                         Participacion p = new Participacion();
                         p.setUsuario(usuario);
@@ -88,7 +87,7 @@ public class GastoController {
             }
         }
 
-        // La diferencia la asume el pagador, pero no se crea deuda hacia él mismo
+        // Agregar la participacion del pagador solo si debe algo extra (diferencia)
         double diferencia = cantidad - sumaParticipaciones;
         if (diferencia > 0.001) {
             Participacion propia = new Participacion();
@@ -99,6 +98,25 @@ public class GastoController {
         }
 
         participacionRepository.saveAll(participaciones);
+
         return "redirect:/grupos/" + grupoId;
+    }
+
+    // NUEVO MÉTODO PARA AÑADIR PARTICIPANTE POR EMAIL
+    @PostMapping("/grupos/{grupoId}/add-email")
+    public String addUsuarioToGrupoPorEmail(@PathVariable Long grupoId, @RequestParam String email,
+            RedirectAttributes redirectAttributes) {
+        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
+        Usuario usuario = usuarioRepository.findByEmail(email);
+
+        if (grupoOpt.isPresent() && usuario != null) {
+            Grupo grupo = grupoOpt.get();
+            grupo.getMiembros().add(usuario);
+            grupoRepository.save(grupo);
+            return "redirect:/grupos/" + grupoId;
+        } else {
+            redirectAttributes.addFlashAttribute("error", "El usuario con email " + email + " no existe.");
+            return "redirect:/grupos/" + grupoId + "/participantes/nuevo";
+        }
     }
 }
