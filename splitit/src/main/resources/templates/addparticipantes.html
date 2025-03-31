@@ -4,13 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Añadir Participantes</title>
-    <!-- Incluimos Bootstrap desde CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/estilos.css" />
 </head>
 
 <body>
-    <div class="container mt-5">
+    <!-- Barra superior -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+        <span class="navbar-brand font-weight-bold">Split.it</span>
+        <div>
+            <a th:href="@{'/grupos/' + ${grupo.idGrupo}}" class="btn btn-outline-secondary mr-2">Volver al Grupo</a>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h1 class="h4 mb-0">Añadir Participantes al Grupo</h1>
@@ -25,7 +34,6 @@
                 </ul>
 
                 <h3 class="h5">Añadir Nuevo Participante</h3>
-                <!-- Formulario para añadir participante -->
                 <form th:action="@{'/grupos/' + ${grupo.idGrupo} + '/add'}" method="post" class="form-inline">
                     <div class="form-group mb-2 mr-2">
                         <label for="usuarioId" class="sr-only">ID del usuario</label>
@@ -41,7 +49,7 @@
         </div>
     </div>
 
-    <!-- Incluimos JS de Bootstrap (opcional) -->
+    <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

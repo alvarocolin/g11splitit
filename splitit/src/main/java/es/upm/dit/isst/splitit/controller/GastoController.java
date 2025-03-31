@@ -33,7 +33,8 @@ public class GastoController {
     private ParticipacionRepository participacionRepository;
 
     @GetMapping("/nuevo-formulario")
-    public String mostrarFormularioNuevoGasto(@RequestParam Long grupoId, @RequestParam Long usuarioId, Map<String, Object> model) {
+    public String mostrarFormularioNuevoGasto(@RequestParam Long grupoId, @RequestParam Long usuarioId,
+            Map<String, Object> model) {
         Grupo grupo = grupoRepository.findById(grupoId).orElseThrow();
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
 
@@ -61,8 +62,8 @@ public class GastoController {
         gasto.setPagador(pagador);
         gastoRepository.save(gasto);
 
-        // Procesar participaciones
         List<Participacion> participaciones = new ArrayList<>();
+        double sumaParticipaciones = 0.0;
 
         for (String key : params.keySet()) {
             if (key.startsWith("participaciones[") && key.endsWith("].incluido")) {
@@ -74,18 +75,30 @@ public class GastoController {
                     double cantidadUsuario = Double.parseDouble(params.get(cantidadKey));
                     Usuario usuario = usuarioRepository.findById(userId).orElseThrow();
 
-                    Participacion p = new Participacion();
-                    p.setUsuario(usuario);
-                    p.setGasto(gasto);
-                    p.setCantidad(cantidadUsuario);
-
-                    participaciones.add(p);
+                    // Solo añadir si NO es el pagador
+                    if (!usuario.getIdUsuario().equals(pagadorId)) {
+                        Participacion p = new Participacion();
+                        p.setUsuario(usuario);
+                        p.setGasto(gasto);
+                        p.setCantidad(cantidadUsuario);
+                        participaciones.add(p);
+                        sumaParticipaciones += cantidadUsuario;
+                    }
                 }
             }
         }
 
-        participacionRepository.saveAll(participaciones);
+        // La diferencia la asume el pagador, pero no se crea deuda hacia él mismo
+        double diferencia = cantidad - sumaParticipaciones;
+        if (diferencia > 0.001) {
+            Participacion propia = new Participacion();
+            propia.setUsuario(pagador);
+            propia.setGasto(gasto);
+            propia.setCantidad(diferencia);
+            participaciones.add(propia);
+        }
 
+        participacionRepository.saveAll(participaciones);
         return "redirect:/grupos/" + grupoId;
     }
 }

@@ -8,43 +8,43 @@
 </head>
 
 <body>
-    <div class="container mt-5">
-        <!-- Título del grupo -->
-        <div class="mb-4">
+    <!-- Barra superior -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+        <a class="navbar-brand font-weight-bold">Split.it</a>
+        <form th:action="@{/logout}" method="post" class="form-inline my-2 my-lg-0">
+            <button class="btn btn-outline-danger my-2 my-sm-0" type="submit">Cerrar sesión</button>
+        </form>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
             <h1 class="display-5" th:text="'Grupo: ' + ${grupo.nombre}">Nombre del Grupo</h1>
+            <a href="/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
         </div>
 
-        <!-- Sección de Participantes -->
+        <!-- Participantes -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>Participantes</span>
-                    <a th:href="@{/grupos/{id}/participantes/nuevo(id=${grupo.idGrupo})}" class="btn btn-light btn-sm">
-                        Añadir Participante
-                    </a>
-                </div>
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <span>Participantes</span>
+                <a th:href="@{/grupos/{id}/participantes/nuevo(id=${grupo.idGrupo})}" class="btn btn-light btn-sm">
+                    Añadir Participante
+                </a>
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    <li class="list-group-item" th:each="participante : ${grupo.miembros}"
-                        th:text="${participante.nombre} + ' (' + participante.email + ')'">
-                        Participante
-                    </li>
-                    <li class="list-group-item" th:if="${#lists.isEmpty(grupo.miembros)}">
-                        No hay participantes.
-                    </li>
+                    <li class="list-group-item" th:each="p : ${grupo.miembros}"
+                        th:text="${p.nombre} + ' (' + p.email + ')'">Participante</li>
+                    <li class="list-group-item" th:if="${#lists.isEmpty(grupo.miembros)}">No hay participantes.</li>
                 </ul>
             </div>
         </div>
 
-        <!-- Sección de Gastos -->
+        <!-- Gastos -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>Gastos del Grupo</span>
-                    <a th:href="@{/gastos/nuevo-formulario(grupoId=${grupo.idGrupo}, usuarioId=${usuario.idUsuario})}"
-                        class="btn btn-light btn-sm">Añadir Gasto</a>
-                </div>
+            <div class="card-header bg-success text-white d-flex justify-content-between">
+                <span>Gastos del Grupo</span>
+                <a th:href="@{/gastos/nuevo-formulario(grupoId=${grupo.idGrupo}, usuarioId=${usuario.idUsuario})}"
+                    class="btn btn-light btn-sm">Añadir Gasto</a>
             </div>
             <div class="card-body">
                 <table class="table table-striped">
@@ -58,7 +58,8 @@
                     <tbody>
                         <tr th:each="gasto : ${gastos}">
                             <td th:text="${gasto.concepto}">Concepto</td>
-                            <td th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 'COMMA', 2, 'NONE')} + ' €'">Cantidad</td>
+                            <td th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 'COMMA', 2, 'NONE')} + ' €'">0,00 €
+                            </td>
                             <td th:text="${gasto.pagador.nombre}">Pagador</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(gastos)}">
@@ -69,7 +70,7 @@
             </div>
         </div>
 
-        <!-- Sección de Balance -->
+        <!-- Balance -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-info text-white">
                 Balance del Grupo
@@ -79,7 +80,7 @@
                     <thead>
                         <tr>
                             <th>Usuario</th>
-                            <th>Total Pagado (€)</th>
+                            <th>Total Deben (€)</th>
                             <th>Total Debe (€)</th>
                             <th>Balance (€)</th>
                         </tr>
@@ -93,43 +94,7 @@
             </div>
         </div>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const grupoId = /*[[${grupo.idGrupo}]]*/ '0';
-
-                fetch(`/participaciones/balance/grupo/${grupoId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const tbody = document.getElementById("balanceTableBody");
-                        tbody.innerHTML = "";
-                        const filas = [];
-
-                        data.forEach(item => {
-                            filas.push(`
-                        <tr>
-                            <td>${item.usuario}</td>
-                            <td>${item.pagado.toFixed(2)} €</td>
-                            <td>${item.debe.toFixed(2)} €</td>
-                            <td class="${item.balance > 0 ? 'text-success' : item.balance < 0 ? 'text-danger' : 'text-secondary'}">
-                                ${item.balance.toFixed(2)} €
-                            </td>
-                        </tr>
-                    `);
-                        });
-
-                        tbody.innerHTML = filas.length ? filas.join('') :
-                            `<tr><td colspan="4" class="text-center">No hay balance disponible.</td></tr>`;
-                    })
-                    .catch(error => {
-                        document.getElementById("balanceTableBody").innerHTML =
-                            `<tr><td colspan="4" class="text-danger">Error al cargar el balance.</td></tr>`;
-                        console.error("Error al obtener balance:", error);
-                    });
-            });
-        </script>
-
-
-        <!-- Sección de Deudas Detalladas -->
+        <!-- Deudas Detalladas -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-warning text-dark">
                 Deudas entre Participantes
@@ -152,45 +117,58 @@
             </div>
         </div>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const grupoId = /*[[${grupo.idGrupo}]]*/ '0';
+        <!-- Script de carga balance y deudas -->
+        <script th:inline="javascript">
+            const grupoId = [[${ grupo.idGrupo }]];
 
-                fetch(`/participaciones/deudas/grupo/${grupoId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const tbody = document.getElementById("deudasTableBody");
-                        tbody.innerHTML = "";
-                        const filas = [];
-
-                        Object.entries(data).forEach(([deudor, acreedores]) => {
-                            Object.entries(acreedores).forEach(([acreedor, cantidad]) => {
-                                filas.push(`
-                            <tr>
-                                <td>${deudor}</td>
-                                <td>${acreedor}</td>
-                                <td>${cantidad.toFixed(2)} €</td>
-                            </tr>
-                        `);
-                            });
-                        });
-
-                        tbody.innerHTML = filas.length ? filas.join('') :
-                            `<tr><td colspan="3" class="text-center">No hay deudas registradas.</td></tr>`;
-                    })
-                    .catch(error => {
-                        document.getElementById("deudasTableBody").innerHTML =
-                            `<tr><td colspan="3" class="text-danger">Error al cargar las deudas.</td></tr>`;
-                        console.error("Error al obtener deudas:", error);
+            fetch(`/participaciones/balance/grupo/${grupoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById("balanceTableBody");
+                    tbody.innerHTML = "";
+                    data.forEach(item => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${item.usuario}</td>
+                            <td>${item.pagado.toFixed(2).replace('.', ',')} €</td>
+                            <td>${item.debe.toFixed(2).replace('.', ',')} €</td>
+                            <td class="${item.balance > 0 ? 'text-success' : item.balance < 0 ? 'text-danger' : 'text-secondary'}">
+                                ${item.balance.toFixed(2).replace('.', ',')} €
+                            </td>`;
+                        tbody.appendChild(row);
                     });
-            });
+                })
+                .catch(err => {
+                    document.getElementById("balanceTableBody").innerHTML =
+                        `<tr><td colspan="4" class="text-danger">Error al cargar balance.</td></tr>`;
+                    console.error("Balance error:", err);
+                });
+
+            fetch(`/participaciones/deudas/grupo/${grupoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById("deudasTableBody");
+                    tbody.innerHTML = "";
+                    const filas = [];
+                    Object.entries(data).forEach(([deudor, acreedores]) => {
+                        Object.entries(acreedores).forEach(([acreedor, cantidad]) => {
+                            filas.push(`
+                                <tr>
+                                    <td>${deudor}</td>
+                                    <td>${acreedor}</td>
+                                    <td>${cantidad.toFixed(2).replace('.', ',')} €</td>
+                                </tr>`);
+                        });
+                    });
+                    tbody.innerHTML = filas.length ? filas.join('') :
+                        `<tr><td colspan="3" class="text-center">No hay deudas registradas.</td></tr>`;
+                })
+                .catch(err => {
+                    document.getElementById("deudasTableBody").innerHTML =
+                        `<tr><td colspan="3" class="text-danger">Error al cargar deudas.</td></tr>`;
+                    console.error("Deudas error:", err);
+                });
         </script>
-
-
-        <!-- Botón para volver -->
-        <div class="text-right">
-            <a href="/dashboard" class="btn btn-secondary">Volver al Dashboard</a>
-        </div>
     </div>
 
     <!-- Bootstrap JS -->

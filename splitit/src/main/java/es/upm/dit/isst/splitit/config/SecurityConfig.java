@@ -39,24 +39,27 @@ public UserDetailsService userDetailsService() {
     @SuppressWarnings("deprecation")
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // No se recomienda en producción, pero para pruebas podemos usar NoOpPasswordEncoder
+        //  para pruebas podemos usar NoOpPasswordEncoder
         return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/login", "/css/**", "/js/**", "/h2-console/**").permitAll()
-                .requestMatchers("/dashboard").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")               // Página de login personalizada
-                .defaultSuccessUrl("/dashboard", true) // URL de redirección tras login
-                .permitAll()
-            )
-            .logout(logout -> logout.permitAll());
+                .authorizeHttpRequests(authz -> authz
+                                .requestMatchers("/login", "/css/**", "/js/**", "/h2-console/**").permitAll()
+                                .requestMatchers("/dashboard").permitAll()
+                                .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                                .loginPage("/login")               // Página de login personalizada
+                                .defaultSuccessUrl("/dashboard", true) // URL de redirección tras login
+                                .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll());
         return http.build();
     }
 }

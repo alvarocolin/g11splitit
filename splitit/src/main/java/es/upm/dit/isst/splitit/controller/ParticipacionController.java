@@ -74,20 +74,15 @@ public class ParticipacionController {
         if (!grupoOpt.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado");
         }
-        Grupo grupo = grupoOpt.get();
 
+        Grupo grupo = grupoOpt.get();
         List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
 
-        Map<Long, Double> totalPagadoPorUsuario = new HashMap<>();
-        Map<Long, Double> totalDebePorUsuario = new HashMap<>();
-        Map<Long, Map<Long, Double>> deudasEntreUsuarios = new HashMap<>();
+        Map<Long, Double> totalDebePorUsuario = new HashMap<>(); // Lo que debe cada uno
+        Map<Long, Double> totalLeDebenAlUsuario = new HashMap<>(); // Lo que le deben a cada uno
 
         for (Gasto gasto : gastosGrupo) {
-            Usuario pagador = gasto.getPagador();
-            Long idPagador = pagador.getIdUsuario();
-            totalPagadoPorUsuario.put(idPagador,
-                    totalPagadoPorUsuario.getOrDefault(idPagador, 0.0) + gasto.getCantidad());
-
+            Long idPagador = gasto.getPagador().getIdUsuario();
             List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(gasto.getIdGasto());
 
             for (Participacion p : participaciones) {
@@ -95,20 +90,20 @@ public class ParticipacionController {
                 double cantidad = p.getCantidad();
 
                 if (!idParticipante.equals(idPagador)) {
+                    // Lo que debe el participante
                     totalDebePorUsuario.put(idParticipante,
                             totalDebePorUsuario.getOrDefault(idParticipante, 0.0) + cantidad);
 
-                    deudasEntreUsuarios
-                            .computeIfAbsent(idParticipante, k -> new HashMap<>())
-                            .put(idPagador,
-                                    deudasEntreUsuarios.get(idParticipante).getOrDefault(idPagador, 0.0) + cantidad);
+                    // Lo que le deben al pagador
+                    totalLeDebenAlUsuario.put(idPagador,
+                            totalLeDebenAlUsuario.getOrDefault(idPagador, 0.0) + cantidad);
                 }
             }
         }
 
         Set<Long> usuarios = new HashSet<>();
-        usuarios.addAll(totalPagadoPorUsuario.keySet());
         usuarios.addAll(totalDebePorUsuario.keySet());
+        usuarios.addAll(totalLeDebenAlUsuario.keySet());
 
         List<Map<String, Object>> resultado = new ArrayList<>();
 
@@ -116,13 +111,13 @@ public class ParticipacionController {
             Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
-                double pagado = totalPagadoPorUsuario.getOrDefault(idUsuario, 0.0);
+                double leDeben = totalLeDebenAlUsuario.getOrDefault(idUsuario, 0.0);
                 double debe = totalDebePorUsuario.getOrDefault(idUsuario, 0.0);
-                double balance = pagado - debe;
+                double balance = leDeben - debe;
 
                 Map<String, Object> datoUsuario = new HashMap<>();
                 datoUsuario.put("usuario", usuario.getNombre());
-                datoUsuario.put("pagado", pagado);
+                datoUsuario.put("pagado", leDeben); // opcional: cambiar el nombre a "le deben"
                 datoUsuario.put("debe", debe);
                 datoUsuario.put("balance", balance);
 
