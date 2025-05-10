@@ -26,24 +26,37 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
         OAuth2User oauth2User = super.loadUser(userRequest);
 
-        // Extraer datos del usuario de Google
+        // Mostrar todos los atributos recibidos de Google
         Map<String, Object> attributes = oauth2User.getAttributes();
+        System.out.println("🔍 Atributos recibidos de Google:");
+        attributes.forEach((key, value) -> System.out.println("   " + key + ": " + value));
+
+        // Extraer campos
         String email = (String) attributes.get("email");
         String nombre = (String) attributes.get("name");
 
-        // Verificar si ya existe en base de datos
+        System.out.println("📩 Email detectado: " + email);
+        System.out.println("🙍 Nombre detectado: " + nombre);
+
+        // Verificar si ya existe
         Usuario usuario = usuarioRepository.findByEmail(email);
         if (usuario == null) {
-            // Crear nuevo usuario
+            System.out.println("🆕 Usuario no existe. Creando uno nuevo...");
+
             usuario = new Usuario();
             usuario.setEmail(email);
             usuario.setNombre(nombre);
-            usuario.setPassword(passwordEncoder.encode("oauth2_placeholder")); // No se usa
+            usuario.setPassword(passwordEncoder.encode("oauth2_placeholder"));
             usuario.setAuth("ROLE_USER");
+
             usuarioRepository.save(usuario);
+            System.out.println("✅ Usuario creado correctamente.");
+        } else {
+            System.out.println("✔️ Usuario ya registrado. No se crea uno nuevo.");
         }
 
         return oauth2User;
     }
 }
+
 
