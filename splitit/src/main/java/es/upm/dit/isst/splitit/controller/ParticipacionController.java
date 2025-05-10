@@ -1,3 +1,12 @@
+/**
+ * Split.it - ParticipacionController.java
+ * Controlador para gestionar las participaciones de gasto y los balances de usuario en un grupo.
+ * 
+ * @author Grupo 11
+ * @version 2.0
+ * @since 2025-03-30
+ */
+
 package es.upm.dit.isst.splitit.controller;
 
 import es.upm.dit.isst.splitit.model.Gasto;
@@ -9,12 +18,19 @@ import es.upm.dit.isst.splitit.repository.ParticipacionRepository;
 import es.upm.dit.isst.splitit.repository.UsuarioRepository;
 import es.upm.dit.isst.splitit.repository.GrupoRepository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/participaciones")
@@ -32,14 +48,11 @@ public class ParticipacionController {
     @Autowired
     private GrupoRepository grupoRepository;
 
-    @PostMapping("/gastos/{gastoId}")
-    public ResponseEntity<?> addParticipacionesToGasto(@PathVariable Long gastoId,
+    @PostMapping("/gastos/{id}")
+    public ResponseEntity<?> addParticipacionesToGasto(@PathVariable("id") Long gastoId,
             @RequestBody List<Participacion> participaciones) {
-        Optional<Gasto> gastoOpt = gastoRepository.findById(gastoId);
-        if (!gastoOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Gasto no encontrado");
-        }
-        Gasto gasto = gastoOpt.get();
+        Gasto gasto = gastoRepository.findById(gastoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gasto no encontrado"));
 
         boolean manual = participaciones.stream().anyMatch(p -> p.getCantidad() != null);
 
@@ -68,25 +81,21 @@ public class ParticipacionController {
         return ResponseEntity.ok("Participaciones añadidas");
     }
 
-    @GetMapping("/balance/grupo/{grupoId}")
-    public ResponseEntity<?> getBalancePorGrupo(@PathVariable Long grupoId) {
-        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
-        if (!grupoOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado");
-        }
-
-        Grupo grupo = grupoOpt.get();
+    @GetMapping("/balance/grupo/{id}")
+    public ResponseEntity<?> getBalancePorGrupo(@PathVariable("id") Long id) {
+        Grupo grupo = grupoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
         List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
 
         Map<Long, Double> totalDebePorUsuario = new HashMap<>(); // Lo que debe cada uno
         Map<Long, Double> totalLeDebenAlUsuario = new HashMap<>(); // Lo que le deben a cada uno
 
         for (Gasto gasto : gastosGrupo) {
-            Long idPagador = gasto.getPagador().getIdUsuario();
-            List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(gasto.getIdGasto());
+            Long idPagador = gasto.getPagador().getId();
+            List<Participacion> participaciones = participacionRepository.findByGasto_Id(gasto.getId());
 
             for (Participacion p : participaciones) {
-                Long idParticipante = p.getUsuario().getIdUsuario();
+                Long idParticipante = p.getUsuario().getId();
                 double cantidad = p.getCantidad();
 
                 if (!idParticipante.equals(idPagador)) {
@@ -128,21 +137,18 @@ public class ParticipacionController {
         return ResponseEntity.ok(resultado);
     }
 
-    @GetMapping("/deudas/grupo/{grupoId}")
-    public ResponseEntity<?> getDeudasEntreUsuarios(@PathVariable Long grupoId) {
-        Optional<Grupo> grupoOpt = grupoRepository.findById(grupoId);
-        if (!grupoOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado");
-        }
-        Grupo grupo = grupoOpt.get();
+    @GetMapping("/deudas/grupo/{id}")
+    public ResponseEntity<?> getDeudasEntreUsuarios(@PathVariable("id") Long id) {
+        Grupo grupo = grupoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
         List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
         Map<Long, Map<Long, Double>> deudas = new HashMap<>();
 
         for (Gasto gasto : gastosGrupo) {
-            Long pagadorId = gasto.getPagador().getIdUsuario();
-            List<Participacion> participaciones = participacionRepository.findByGasto_IdGasto(gasto.getIdGasto());
+            Long pagadorId = gasto.getPagador().getId();
+            List<Participacion> participaciones = participacionRepository.findByGasto_Id(gasto.getId());
             for (Participacion p : participaciones) {
-                Long participanteId = p.getUsuario().getIdUsuario();
+                Long participanteId = p.getUsuario().getId();
                 double cantidad = p.getCantidad();
 
                 if (!participanteId.equals(pagadorId)) {
@@ -164,4 +170,5 @@ public class ParticipacionController {
 
         return ResponseEntity.ok(resultado);
     }
+
 }

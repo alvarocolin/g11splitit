@@ -1,174 +1,369 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <meta charset="UTF-8" />
-    <title>Detalles del Grupo</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" data-bs-theme="light">
+<head th:replace="~{layouts/base::head}">
+    <meta charset="UTF-8">
 </head>
-
-<body>
-    <div class="container mt-5">
-        <!-- Encabezado con nombre del grupo y opciones -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="display-5" th:text="'Grupo: ' + ${grupo.nombre}">Nombre del Grupo</h1>
-            <div>
-                <a href="/dashboard" class="btn btn-outline-secondary mr-2">Volver al Dashboard</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger">Logout</button>
-                </form>
+<body class="mb-5">
+    <header th:replace="~{layouts/base::header}"></header>
+    <main>
+        <div class="container mb-5 pt-5">
+            <div class="row pb-4">
+                <!-- Título del grupo -->
+                <div class="col-md-7">
+                    <h1 class="m-0"><span th:text="${grupo.nombre}">Grupo</span><small
+                            th:if="${grupo.saldado}">(saldado)</small></h1>
+                </div>
+                <!-- Acciones en el grupo -->
+                <div class="col-md-5 text-end">
+                    <!-- Añadir gasto -->
+                    <button class="btn btn-white" type="button" data-bs-toggle="modal" data-bs-target="#gasto" id="add-gasto">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon i-plus" viewBox="0 0 16 16">
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                        </svg>Añadir gasto</button>
+                    <!-- Ver detalles del grupo -->
+                    <button class="btn btn-white" type="button" data-bs-toggle="modal" data-bs-target="#participantes">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon i-info" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
+                        </svg>Detalles del grupo</button>
+                </div>
             </div>
         </div>
-
-        <!-- Participantes -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <span>Participantes</span>
-                <a th:href="@{/grupos/{id}/participantes/nuevo(id=${grupo.idGrupo})}" class="btn btn-light btn-sm">
-                    Añadir Participante
-                </a>
+        <div class="container">
+            <div th:unless="${#lists.isEmpty(gastos)}" class="row">
+                <!-- Balance del usuario -->
+                <div class="col">
+                    <h3 class="mb-3">Mi balance</h3>
+                </div>
+                <div th:unless="${grupo.saldado}" class="col-12">
+                    <p class="mb-5" id="balance">Cargando balance…</p>
+                </div>
+                <div th:if="${grupo.saldado}" class="col-12">
+                    <p class="mb-5" id="balance">Cargando deuda…</p>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="list-group">
-                    <li class="list-group-item" th:each="p : ${grupo.miembros}"
-                        th:text="${p.nombre}">Participante</li>
-                    <li class="list-group-item" th:if="${#lists.isEmpty(grupo.miembros)}">No hay participantes.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Gastos -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-success text-white d-flex justify-content-between">
-                <span>Gastos del Grupo</span>
-                <a th:href="@{/gastos/nuevo-formulario(grupoId=${grupo.idGrupo}, usuarioId=${usuario.idUsuario})}"
-                    class="btn btn-light btn-sm">Añadir Gasto</a>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Concepto</th>
-                            <th>Cantidad</th>
-                            <th>Pagador</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="gasto : ${gastos}">
-                            <td th:text="${gasto.concepto}">Concepto</td>
-                            <td th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 'COMMA', 2, 'NONE')} + ' €'">0,00 €
-                            </td>
-                            <td th:text="${gasto.pagador.nombre}">Pagador</td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(gastos)}">
-                            <td colspan="3" class="text-center">No se han registrado gastos.</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="row">
+                <!-- Gastos del grupo -->
+                <div class="col">
+                    <h3 class="mb-4">Gastos del grupo</h3>
+                    <table class="w-100">
+                        <thead>
+                            <tr>
+                                <th>Concepto</th>
+                                <th>Fecha</th>
+                                <th>Añadido por</th>
+                                <th>Coste</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="gasto : ${gastos}" class="gasto-row" th:data-id="${gasto.id}" th:data-concepto="${gasto.concepto}" th:data-cantidad="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')} + '€'" th:data-fecha="${#dates.format(gasto.fecha, 'dd/MM/yyyy')}" th:data-pagador="${gasto.pagador.nombre}">
+                                <td th:text="${gasto.concepto}">Concepto</td>
+                                <td th:text="${#dates.format(gasto.fecha, 'dd/MM/yyyy')}">Fecha</td>
+                                <td th:text="${gasto.pagador.nombre}">Usuario</td>
+                                <td><span th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')}">Coste</span> EUR</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(gastos)}" style="height: 300px">
+                                <td colspan="4" class="text-center" style="line-height: 2">¡Vaya! Todavía no compartís ningún gasto. <br> Sólo tienes que hacer click en «Añadir gasto» para empezar.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p th:unless="${#lists.isEmpty(gastos)}" class="mt-3 ms-4" id="total">Cargando total…</p>
+                </div>
             </div>
         </div>
-
-        <!-- Balance -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">Balance del Grupo</div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Total Deben (€)</th>
-                            <th>Total Debe (€)</th>
-                            <th>Balance (€)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="balanceTableBody">
-                        <tr>
-                            <td colspan="4">Cargando balance...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </main>
+    <!-- Modal detalles del grupo -->
+    <div class="modal fade" id="participantes" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h2 th:text="${grupo.nombre}" class="mb-4">Grupo</h2>
+                    <div th:if="${grupo.saldado}">
+                        <h4>Estado</h4>
+                        <p>Grupo saldado</p>
+                    </div>
+                    <h4>Participantes</h4>
+                    <table class="w-100 mb-2">
+                        <tbody>
+                            <tr th:each="usuario : ${grupo.miembros}">
+                                <td><span th:text="${usuario.nombre}">Usuario</span><small th:if="${usuario.id == grupo.admin.id}">(admin)</small></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(grupo.miembros)}">
+                                <td>No hay participantes.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${usuario.id == grupo.admin.id}">
+                        <a th:href="@{/grupos/{id}/editar(id=${grupo.id})}" class="btn btn-white mt-2 mb-3" id="add-participante">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="i i-pen" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                            </svg>Editar grupo</a>
+                        <form th:action="@{/grupos/{id}/saldar(id=${grupo.id})}" id="saldar-form" class="d-inline">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-red mt-2 mb-3" id="saldar"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon i-cash" viewBox="0 0 16 16">
+                                <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4" />
+                                <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2z" />
+                            </svg>Saldar grupo</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Deudas Detalladas -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-warning text-dark">Deudas entre Participantes</div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Deudor</th>
-                            <th>Acreedor</th>
-                            <th>Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody id="deudasTableBody">
-                        <tr>
-                            <td colspan="3">Cargando deudas...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Script: carga dinámica balance y deudas -->
-        <script th:inline="javascript">
-            const grupoId = [[${ grupo.idGrupo }]];
-
-            fetch(`/participaciones/balance/grupo/${grupoId}`)
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.getElementById("balanceTableBody");
-                    tbody.innerHTML = "";
-                    data.forEach(item => {
-                        const row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${item.usuario}</td>
-                            <td>${item.pagado.toFixed(2).replace('.', ',')} €</td>
-                            <td>${item.debe.toFixed(2).replace('.', ',')} €</td>
-                            <td class="${item.balance > 0 ? 'text-success' : item.balance < 0 ? 'text-danger' : 'text-secondary'}">
-                                ${item.balance.toFixed(2).replace('.', ',')} €
-                            </td>`;
-                        tbody.appendChild(row);
-                    });
-                })
-                .catch(err => {
-                    document.getElementById("balanceTableBody").innerHTML =
-                        `<tr><td colspan="4" class="text-danger">Error al cargar balance.</td></tr>`;
-                    console.error("Balance error:", err);
-                });
-
-            fetch(`/participaciones/deudas/grupo/${grupoId}`)
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.getElementById("deudasTableBody");
-                    tbody.innerHTML = "";
-                    const filas = [];
-                    Object.entries(data).forEach(([deudor, acreedores]) => {
-                        Object.entries(acreedores).forEach(([acreedor, cantidad]) => {
-                            filas.push(`
-                                <tr>
-                                    <td>${deudor}</td>
-                                    <td>${acreedor}</td>
-                                    <td>${cantidad.toFixed(2).replace('.', ',')} €</td>
-                                </tr>`);
-                        });
-                    });
-                    tbody.innerHTML = filas.length ? filas.join('') :
-                        `<tr><td colspan="3" class="text-center">No hay deudas registradas.</td></tr>`;
-                })
-                .catch(err => {
-                    document.getElementById("deudasTableBody").innerHTML =
-                        `<tr><td colspan="3" class="text-danger">Error al cargar deudas.</td></tr>`;
-                    console.error("Deudas error:", err);
-                });
-        </script>
     </div>
+    <div th:unless="${grupo.saldado}" class="modal fade" id="gasto" tabindex="-1" aria-hidden="true">
+        <!-- Modal añadir gasto -->
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h2 class="mb-5">Añade un gasto</h2>
+                    <form th:action="@{/gastos/crear}" method="post" id="form" enctype="multipart/form-data">
+                        <input type="hidden" th:name="grupoId" th:value="${grupo.id}" />
+                        <input type="hidden" th:name="pagadorId" th:value="${usuario.id}" />
+                        <div class="form-group">
+                            <label for="concepto">Concepto</label>
+                            <input type="text" class="form-control mt-2" id="concepto" name="concepto"
+                                placeholder="ej. Comida" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="cantidad">Coste (€)</label>
+                            <input type="text" class="form-control mt-2" id="cantidad" name="cantidad" pattern="[0-9]+([,\.][0-9]{1,2})?"
+                                placeholder="0,00" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="recibo">Imagen del recibo (opcional)</label>
+                            <input type="file" class="form-control mt-2 mb-1" id="recibo" name="recibo" accept=".jpeg, .jpg, .png, .tiff">
+                            <small>Máximo 5 MB en formato .jpeg, .png o .tiff</small>
+                        </div>
+                        <h4>Compartir con</h4>
+                        <div class="form-group mt-3" style="max-height: 184px; overflow: scroll">
+                            <div th:each="participante : ${grupo.miembros}" class="form-row mb-2">
+                                <input type="checkbox" class="form-check-input participacion-checkbox"
+                                    th:id="'check-' + ${participante.id}"
+                                    th:name="'participaciones[' + ${participante.id} + '].incluido'" checked>
+                                <label th:for="'check-' + ${participante.id}" th:text="${participante.nombre}" class="ms-2"></label>
+                                <input type="number" step="0.01" lang="es" class="cantidad-input visually-hidden"
+                                    th:name="'participaciones[' + ${participante.id} + '].cantidad'">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-white-outline me-2" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-black">Añadir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal detalles del gasto -->
+    <div class="modal fade" id="detalles" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h2 class="mb-4" id="modal-concepto">Gasto</h2>
+                    <p class="mb-2">Coste: <strong id="modal-cantidad"></strong></p>
+                    <p class="mb-2">Pagado por: <strong id="modal-pagador"></strong></p>
+                    <p class="mb-2">Fecha: <strong id="modal-fecha"></strong></p>
+                    <div id="modal-recibo"></div>
+                    <h4 class="mt-4">Compartido entre</h4>
+                    <ul class="list-unstyled ps-3" id="modal-participantes"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:unless="${#lists.isEmpty(toasts)}" th:replace="~{layouts/base::toasts}"></div>
 
-    <!-- Bootstrap JS -->
+    <script th:unless="${#lists.isEmpty(toasts)}" th:replace="~{layouts/base::toasts-js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("saldar-form").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const csrfToken = formData.get('_csrf');
+                fetch(this.action, {
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("El grupo no se puede saldar");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const nombreGrupo = [[${ grupo.nombre }]];
+            const total = [[${ grupo.total }]];
+            document.getElementsByTagName("title").item(0).innerHTML = nombreGrupo + " - split.it";
+            document.getElementById('total').innerHTML = 'En total: <strong>' + Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(total)) + '<span>EUR</span></strong>';
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.gasto-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    var id = row.dataset.id;
+                    document.getElementById('modal-concepto').textContent = row.dataset.concepto;
+                    document.getElementById('modal-fecha').textContent = row.dataset.fecha;
+                    document.getElementById('modal-pagador').textContent = row.dataset.pagador;
+                    document.getElementById('modal-cantidad').textContent = row.dataset.cantidad;
+                    fetch(`/gastos/${id}/recibo`)
+                            .then(res => res.text())
+                            .then(archivo => {
+                                if (archivo != null && archivo !== "") {
+                                    const svg = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="i i-receipt" viewBox="0 0 16 16"><path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5M11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z"/><path d="M2.354.646a.5.5 0 0 0-.801.13l-.5 1A.5.5 0 0 0 1 2v13H.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1H15V2a.5.5 0 0 0-.053-.224l-.5-1a.5.5 0 0 0-.8-.13L13 1.293l-.646-.647a.5.5 0 0 0-.708 0L11 1.293l-.646-.647a.5.5 0 0 0-.708 0L9 1.293 8.354.646a.5.5 0 0 0-.708 0L7 1.293 6.354.646a.5.5 0 0 0-.708 0L5 1.293 4.354.646a.5.5 0 0 0-.708 0L3 1.293zm-.217 1.198.51.51a.5.5 0 0 0 .707 0L4 1.707l.646.647a.5.5 0 0 0 .708 0L6 1.707l.646.647a.5.5 0 0 0 .708 0L8 1.707l.646.647a.5.5 0 0 0 .708 0L10 1.707l.646.647a.5.5 0 0 0 .708 0L12 1.707l.646.647a.5.5 0 0 0 .708 0l.509-.51.137.274V15H2V2.118z"/></svg>`;
+                                    document.getElementById('modal-recibo').innerHTML = `<a href="/uploads/${archivo}" target="_blank">${svg}Ver recibo</a>`;
+                                } else {
+                                    document.getElementById('modal-recibo').innerHTML = ``;
+                                }
+                            });
+                    fetch(`/gastos/${id}/participantes`)
+                            .then(res => res.json())
+                            .then(participantes => {
+                                participantes.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                                const ul = document.getElementById('modal-participantes');
+                                ul.innerHTML = '';
+                                participantes.forEach(p => {
+                                    const li = document.createElement('li');
+                                    li.textContent = p.nombre;
+                                    ul.appendChild(li);
+                                });
+                            });
+
+                    const modal = new bootstrap.Modal(document.getElementById('detalles'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+    <script th:unless="${grupo.saldado}" th:inline="javascript">
+        // Script de balance
+        document.addEventListener('DOMContentLoaded', () => {
+            const grupoId = [[${ grupo.id }]];
+            const usuarioId = [[${ usuario.id }]];
+
+            fetch(`/grupos/${grupoId}/balance?usuario=${usuarioId}`)
+                    .then(res => res.json())
+                    .then(balance => {
+                        showBalance = Math.abs(balance);
+                        showBalance = showBalance.toFixed(2).replace('.', ',');
+                        if (balance > 0) {
+                            document.getElementById('balance').innerHTML = 'Te deben <strong>' + showBalance + '<span>EUR</span></strong>';
+                        } else if (balance < 0) {
+                            document.getElementById('balance').innerHTML = 'Debes <strong>' + showBalance + '<span>EUR</span></strong>';
+                        } else {
+                            document.getElementById('balance').innerHTML = 'No debes nada :) (y tampoco te deben)';
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('balance').innerHTML = '<span class="text danger">Error al cargar el balance</span>';
+                        console.error("Balance error:", err);
+                    });
+        });
+    </script>
+    <script th:unless="${grupo.saldado}">
+        // Script de añadir gastos
+        function repartirEquitativamente() {
+            const checkboxes = document.querySelectorAll(".participacion-checkbox");
+            const cantidad = parseFloat(document.getElementById("cantidad").value.replace(",", ".") || "0");
+            const activos = Array.from(checkboxes).filter(cb => cb.checked);
+
+            if (activos.length === 0) return;
+
+            const pagadorId = document.querySelector('input[name="pagadorId"]').value;
+            const repartoBruto = cantidad / activos.length;
+            const repartoRedondeado = Math.floor(repartoBruto * 100) / 100;
+
+            let suma = 0;
+            activos.forEach(cb => {
+                const input = cb.closest(".form-row").querySelector(".cantidad-input");
+                input.value = repartoRedondeado.toFixed(2);
+                suma += repartoRedondeado;
+            });
+
+            const diferencia = +(cantidad - suma).toFixed(2);
+            if (Math.abs(diferencia) > 0.001) {
+                for (const cb of activos) {
+                    const id = cb.id.replace("check-", "");
+                    if (id === pagadorId) {
+                        const input = cb.closest(".form-row").querySelector(".cantidad-input");
+                        input.value = (parseFloat(input.value) + diferencia).toFixed(2);
+                        break;
+                    }
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('cantidad').addEventListener('keyup', () => {
+                repartirEquitativamente();
+            });
+            document.getElementById('form').addEventListener('submit', function (e) {
+                const cantidad = document.getElementById("cantidad");
+                cantidad.value = cantidad.value.replace(",", ".");
+                const checkboxes = document.querySelectorAll(".participacion-checkbox");
+                const cantidadTotal = parseFloat(document.getElementById("cantidad").value || "0");
+                let suma = 0;
+
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        const input = cb.closest(".form-row").querySelector(".cantidad-input");
+                        const val = parseFloat(input.value || "0");
+                        suma += val;
+                    }
+                });
+
+                if (Math.abs(suma - cantidadTotal) > 0.01) {
+                    document.getElementById("error-message").style.display = "block";
+                    e.preventDefault();
+                } else {
+                    document.getElementById("error-message").style.display = "none";
+                }
+            });
+        });
+    </script>
+    <script th:if="${grupo.saldado}">
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('add-gasto').classList.add('disabled');
+            document.getElementById('add-participante').classList.add('disabled');
+            document.getElementById('saldar').classList.add('disabled');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const grupoId = [[${ grupo.id }]];
+            const usuarioId = [[${ usuario.id }]];
+
+            fetch(`/grupos/${grupoId}/deuda?usuario=${usuarioId}`)
+                    .then(res => res.json())
+                    .then(deuda => {
+                        document.getElementById('balance').innerHTML = 'Le debes <strong>' + deuda.cantidad + '<span>EUR</span></strong> a <strong>' + deuda.receptor.nombre + '</strong>';
+                    })
+                    .catch(err => {
+                        document.getElementById('balance').innerHTML = 'No debes nada :)';
+                    });
+        });
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>

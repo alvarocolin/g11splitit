@@ -1,3 +1,12 @@
+/**
+ * Split.it - Participacion.java
+ * Modelo de la entidad Participacion.
+ * 
+ * @author Grupo 11
+ * @version 2.0
+ * @since 2025-03-30
+ */
+
 package es.upm.dit.isst.splitit.model;
 
 import jakarta.persistence.*;
@@ -6,28 +15,27 @@ import jakarta.persistence.*;
 @Table(name = "participaciones")
 public class Participacion {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long idParticipacion;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_gasto", nullable = false)
+    @JoinColumn(name = "gasto", nullable = false)
     private Gasto gasto;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "usuario", nullable = false)
     private Usuario usuario;
 
     @Column(name = "cantidad", nullable = false)
     private Double cantidad;
 
-    // Getters y setters
-    public Long getIdParticipacion() {
-        return idParticipacion;
+    // GETTERS Y SETTERS
+    public Long getId() {
+        return id;
     }
 
-    public void setIdParticipacion(Long idParticipacion) {
-        this.idParticipacion = idParticipacion;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Gasto getGasto() {

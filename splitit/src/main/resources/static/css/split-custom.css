@@ -1,0 +1,546 @@
+.container {
+  margin: 0 auto;
+}
+
+@media (min-width: 1232px) {
+  .container {
+    max-width: 75rem;
+  }
+}
+
+html, body {
+  margin: 0;
+  font-family: 'Lexend', Helvetica, sans-serif;
+  font-feature-settings: 'ss01';
+  font-optical-sizing: auto;
+  color: var(--bs-emphasis-color);
+  background: var(--bs-body-bg);
+}
+
+a {
+  color: var(--bs-emphasis-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+b, .b {
+  font-weight: 600 !important
+}
+
+strong {
+  font-weight: 700 !important;
+}
+
+header .container {
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.logo svg {
+  height: 50px;
+  color: var(--bs-emphasis-color);
+}
+
+.card {
+  position: relative;
+  height: auto;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bg-white-outline {
+  background: var(--bs-body-bg);
+  border: solid 1px var(--bs-emphasis-color);
+}
+
+.card .card-body {
+  position: relative;
+  padding: 24px 22px;
+}
+
+.form-group {
+  margin: 26px 0;
+}
+
+.form-control {
+  font-feature-settings: 'ss01';
+  border: solid 1px var(--bs-emphasis-color);
+}
+
+.form-floating {
+  position: relative;
+}
+
+.form-floating > .form-input::placeholder {
+  color: transparent;
+}
+
+.form-floating > label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 21px 30px;
+  font-size: 16px;
+  color: #4d4d4d;
+  transform-origin: 0 0;
+  transition: all .1s ease-in-out;
+  pointer-events: none;
+}
+
+.form-input {
+  font-family: inherit;
+  font-feature-settings: 'ss01';
+  width: 100%;
+  padding: 20px 30px;
+  font-size: 16px;
+  color: var(--bs-emphasis-color);
+  border: solid 1px #4d4d4d;
+  border-radius: 12px;
+}
+
+.form-floating .form-input:focus, .form-floating .form-input:not(:placeholder-shown) {
+  padding-top: 30px;
+  padding-bottom: 10px;
+}
+
+.form-floating .form-input:focus ~ label, .form-floating .form-input:not(:placeholder-shown) ~ label {
+  transform: scale(.85) translateY(-8px) translateX(6px);
+  opacity: .8;
+}
+
+.form-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+form .btn-form {
+  font-family: 'Lexend', Helvetica, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.form-check-input:checked {
+  background-color: var(--bs-emphasis-color);
+  border-color: var(--bs-emphasis-color);
+}
+
+table {
+  border-radius: 12px;
+  color: #4d4d4d;
+  text-align: left;
+  border-collapse: collapse;
+  overflow: hidden;
+}
+
+table.bg-white {
+  border-top: solid 1px #4d4d4d;
+  border-bottom: solid 1px #4d4d4d;
+  overflow: auto;
+}
+
+.modal table {
+  color: var(--bs-emphasis-color);
+}
+
+tr {
+  background: #f2f2f2;
+  height: 50px;
+}
+
+table.bg-white tr {
+  background: #fff;
+  height: 61px;
+}
+
+.modal table tr {
+  background: #fff;
+}
+
+table tr[onclick], table tr.gasto-row {
+  cursor: pointer;
+  transition: all .2s ease-in-out;
+}
+
+table tr[onclick]:hover, table tr.gasto-row:hover {
+  background: #f8f8f8;
+}
+
+table.bg-white tr[onclick]:hover {
+  background: #f2f2f2;
+}
+
+tr td {
+  width: 22%;
+}
+
+tr td:nth-child(1) {
+  width: 34%;
+}
+
+tr td:last-child {
+  font-size: .75rem;
+}
+
+tr td:last-child span {
+  font-size: 1rem;
+}
+
+tr td:first-child {
+  font-size: 1rem;
+}
+
+th, td {
+  border-bottom: solid 1px #4d4d4d;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+th:first-child, td:first-child {
+  padding-left: 28px;
+}
+
+th:last-child, td:last-child {
+  padding-right: 28px;
+}
+
+th {
+  font-weight: 400;
+}
+
+#balance strong, #total strong {
+  font-size: 1.5rem;
+  margin-left: 4px;
+}
+
+#balance span, #total span {
+  font-size: 1rem;
+  margin: 0 4px;
+}
+
+.modal-content {
+  padding: .5rem 1.25rem;
+}
+
+.modal-header {
+  border: none;
+  padding-bottom: 0;
+}
+
+.btn {
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-feature-settings: 'ss01';
+  transition: all .2s ease-in-out;
+}
+
+.btn-round {
+  padding: 10px 13.5px;
+  border-radius: 50%;
+  transition: all .2s ease-in-out;
+}
+
+.modal .btn, .form .btn {
+  padding: 6px 20px;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn-header {
+  font-size: 1.125rem;
+  font-weight: 500;
+  padding: 6px 26px;
+  margin-left: 20px;
+}
+
+.btn-black {
+  background: var(--bs-emphasis-color);
+  border: solid 1px var(--bs-emphasis-color);
+  color: var(--bs-body-bg);
+}
+
+.btn-header.btn-black {
+  border: solid 2px var(--bs-emphasis-color);
+}
+
+.btn-black:hover {
+  background: transparent;
+  border-color: var(--bs-emphasis-color);
+  color: var(--bs-emphasis-color);
+}
+
+.btn-white {
+  background: var(--bs-body-bg);
+  border: solid 1px var(--bs-body-bg);
+  color: var(--bs-emphasis-color);
+}
+
+.btn-white:hover {
+  border-color: var(--bs-emphasis-color);
+}
+
+.btn-white-outline {
+  background: var(--bs-body-bg);
+  border: solid 1px var(--bs-emphasis-color);
+  color: var(--bs-emphasis-color);
+}
+
+.btn-header.btn-white-outline {
+  border: solid 2px var(--bs-emphasis-color);
+}
+
+.btn-white-outline:hover {
+  background: var(--bs-emphasis-color);
+  color: var(--bs-body-bg);
+}
+
+.btn-red {
+  background: var(--bs-body-bg);
+  border: solid 1px var(--bs-body-bg);
+  color: #dc3545;
+}
+
+.btn-red:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.btn.disabled {
+  border: inherit;
+}
+
+.btn.disabled:hover {
+  color: inherit;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+.dropdown-menu.acc-dropdown {
+  background: #f2f2f2;
+  border: 0;
+  padding: 12px 17px;
+  margin-top: 6px!important;
+}
+
+.dropdown-menu.not-dropdown {
+  min-width: 350px;
+}
+
+.dropdown-menu.acc-dropdown button {
+  font-family: 'Lexend', Helvetica, sans-serif;
+  font-feature-settings: 'ss01';
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.dropdown-menu.acc-dropdown > * {
+  margin-bottom: 8px;
+  transition: all .1s ease-in-out;
+}
+
+.dropdown-menu.acc-dropdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-menu.acc-dropdown > *:hover {
+  opacity: .6;
+}
+
+.dropdown-item-text {
+  width: 100%;
+  white-space: nowrap;
+}
+
+small.dropdown-item-text {
+  color: var(--bs-gray-700);
+}
+
+.card.bg-grey {
+  background: #f2f2f2;
+  border: 0;
+}
+
+.card-grey {
+  min-height: 175px;
+  background: #f2f2f2;
+  border: 0;
+  transition: all .2s ease-in-out;
+}
+
+.card-grey:hover {
+  opacity: .6;
+}
+
+.card-grey-outline {
+  min-height: 175px;
+  border: solid 2px #f2f2f2;
+  transition: all .2s ease-in-out;
+}
+
+.card-grey-outline:hover {
+  background: #f2f2f2;
+}
+
+.card-text {
+  font-size: .75rem;
+  color: #4d4d4d;
+}
+
+.icon {
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.i-chevl {
+  height: .9rem;
+  margin-bottom: 2px;
+}
+
+.i-info {
+  height: 1rem;
+  margin-right: 6px;
+  margin-bottom: 3px;
+}
+
+.i-plus {
+  height: 1.25rem;
+  margin-bottom: 3px;
+}
+
+.i-plusc {
+  height: 2.75rem;
+  margin-top: 12px;
+  margin-bottom: 22px;
+}
+
+.i-logout {
+  height: 1.125rem;
+  margin-right: 7px;
+  margin-bottom: 3px;
+}
+
+.i-pen {
+  height: 1rem;
+  margin-right: 8px;
+  margin-bottom: 4px;
+}
+
+.i-delete {
+  height: 1rem;
+  margin-right: 8px;
+  margin-bottom: 4px;
+}
+
+.i-user {
+  height: 1.5rem;
+  margin-bottom: 3px;
+  margin-right: 10px;
+}
+
+.i-cash {
+  height: 1.1rem;
+  margin: 0 8px 4px 4px;
+}
+
+.i-pass {
+  height: .9rem;
+  margin-right: 8px;
+  margin-bottom: 2px;
+}
+
+.i-bell {
+  height: 1.25rem;
+  margin-bottom: 3px;
+}
+
+.i-receipt {
+  height: 1.1rem;
+  margin-right: 8px;
+  margin-bottom: 4px;
+}
+
+.header-link {
+  font-size: 1.125rem;
+  font-weight: 500;
+  font-feature-settings: 'ss01' 0;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 600;
+  font-feature-settings: 'ss01' 0;
+}
+
+h5 {
+  font-weight: 600;
+}
+
+h4.card-subtitle {
+  font-weight: 500;
+  font-feature-settings: 'ss01' 1;
+}
+
+small {
+  margin-left: 8px;
+}
+
+em {
+  font-style: normal;
+  font-weight: 800;
+}
+
+.index {
+  font-feature-settings: 'ss01' 0;
+}
+
+.index p {
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 300;
+  src: url('/fonts/Lexend-Light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 400;
+  src: url('/fonts/Lexend-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 500;
+  src: url('/fonts/Lexend-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 600;
+  src: url('/fonts/Lexend-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 700;
+  src: url('/fonts/Lexend-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lexend';
+  font-weight: 800;
+  src: url('/fonts/Lexend-Black.woff2') format('woff2');
+}

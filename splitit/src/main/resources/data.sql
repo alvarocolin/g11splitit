@@ -1,5 +1,5 @@
-INSERT INTO usuarios (nombre, email) VALUES ('Alvaro', 'alvaro@example.com');
-INSERT INTO usuarios (nombre, email) VALUES ('Roberto', 'roberto@example.com');
-INSERT INTO usuarios (nombre, email) VALUES ('Alejo', 'alejo@example.com');
-INSERT INTO usuarios (nombre, email) VALUES ('Tomas', 'tomas@example.com');
-INSERT INTO usuarios (nombre, email) VALUES ('Eduardo', 'eduardo@example.com');
+INSERT INTO usuarios (nombre, email, password, auth) VALUES ('Alvaro', 'alvaro@example.com', '$2a$04$KUhY8z7O8JQAEmU756D9Ru6TMt7X./1.ubCWII3tS3.1Vex9dn.am', 'ROLE_USER');
+INSERT INTO usuarios (nombre, email, password, auth) VALUES ('Roberto', 'roberto@example.com', '$2a$04$KUhY8z7O8JQAEmU756D9Ru6TMt7X./1.ubCWII3tS3.1Vex9dn.am', 'ROLE_USER');
+INSERT INTO usuarios (nombre, email, password, auth) VALUES ('Alejo', 'alejo@example.com', '$2a$04$KUhY8z7O8JQAEmU756D9Ru6TMt7X./1.ubCWII3tS3.1Vex9dn.am', 'ROLE_USER');
+INSERT INTO usuarios (nombre, email, password, auth) VALUES ('Tomas', 'tomas@example.com', '$2a$04$KUhY8z7O8JQAEmU756D9Ru6TMt7X./1.ubCWII3tS3.1Vex9dn.am', 'ROLE_USER');
+INSERT INTO usuarios (nombre, email, password, auth) VALUES ('Eduardo', 'eduardo@example.com', '$2a$04$KUhY8z7O8JQAEmU756D9Ru6TMt7X./1.ubCWII3tS3.1Vex9dn.am', 'ROLE_USER');

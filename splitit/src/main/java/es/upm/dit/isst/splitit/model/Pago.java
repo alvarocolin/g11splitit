@@ -1,3 +1,12 @@
+/**
+ * Split.it - Pago.java
+ * Modelo de la entidad Pago.
+ * 
+ * @author Grupo 11
+ * @version 2.0
+ * @since 2025-03-30
+ */
+
 package es.upm.dit.isst.splitit.model;
 
 import jakarta.persistence.*;
@@ -6,28 +15,33 @@ import jakarta.persistence.*;
 @Table(name = "pagos")
 public class Pago {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long idPago;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_emisor", nullable = false)
+    @JoinColumn(name = "emisor", nullable = false)
     private Usuario emisor;
 
     @ManyToOne
-    @JoinColumn(name = "id_receptor", nullable = false)
+    @JoinColumn(name = "receptor", nullable = false)
     private Usuario receptor;
 
     @Column(name = "cantidad", nullable = false)
     private Double cantidad;
 
-    // Getters y setters
-    public Long getIdPago() {
-        return idPago;
+    @Column(name = "estado", nullable = false)
+    private Boolean estado = false;
+
+    @Column(name = "grupo", nullable = false)
+    private String grupo;
+
+    // GETTERS Y SETTERS
+    public Long getId() {
+        return id;
     }
 
-    public void setIdPago(Long idPago) {
-        this.idPago = idPago;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Usuario getEmisor() {
@@ -53,4 +67,21 @@ public class Pago {
     public void setCantidad(Double cantidad) {
         this.cantidad = cantidad;
     }
+
+    public Boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
+    }
+
+    public String getGrupo() {
+        return grupo;
+    }
+
+    public void setGrupo(String grupo) {
+        this.grupo = grupo;
+    }
+
 }

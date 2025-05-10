@@ -1,39 +1,49 @@
+/**
+ * Split.it - Usuario.java
+ * Modelo de la entidad Usuario.
+ * 
+ * @author Grupo 11
+ * @version 2.0
+ * @since 2025-03-30
+ */
+
 package es.upm.dit.isst.splitit.model;
 
-import java.util.Set;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idUsuario;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "nombre", nullable = false)
     private String nombre;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Email @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @ManyToMany(mappedBy = "miembros")
-    private Set<Grupo> grupos;
+    @Column(name = "password", nullable = false)
+    private String password;
 
-    // Getterrs y setters
-    public Long getIdUsuario() {
-        return idUsuario;
+    @Column(name = "auth", nullable = false)
+    private String auth;
+
+    // GETTERS Y SETTERS
+    public Long getId() {
+        return id;
     }
 
-    public void setIdUsuario(Long idUsuario) {
-        this.idUsuario = idUsuario;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNombre() {
@@ -52,11 +62,21 @@ public class Usuario {
         this.email = email;
     }
 
-    public Set<Grupo> getGrupos() {
-        return grupos;
+    @JsonIgnore
+    public String getPassword() {
+        return password;
     }
 
-    public void setGrupos(Set<Grupo> grupos) {
-        this.grupos = grupos;
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @JsonIgnore
+    public String getAuth() {
+        return auth;
+    }
+
+    public void setAuth(String auth) {
+        this.auth = auth;
     }
 }

@@ -1,16 +1,37 @@
-package es.upm.dit.isst.splitit.controller;
+/**
+ * Split.it - LoginController.java
+ * Controlador para gestionar la vista del login y la creación de cuentas.
+ * 
+ * @author Grupo 11
+ * @version 2.0
+ * @since 2023-10-01
+ */
 
+package es.upm.dit.isst.splitit.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller  // Esta anotación es necesaria
+@Controller
 public class LoginController {
 
-    
-    @GetMapping("/login")
+    /**
+     * Método para mostrar la página de inicio de sesión
+     * 
+     * @return Página de inicio de sesión
+     */
+    @GetMapping("/iniciar-sesion")
     public String login() {
-        return "login"; // Asegúrate de que existe login.html en src/main/resources/templates
+        return "login";
+    }
+
+    /**
+     * Método para mostrar la página de creación de cuenta
+     * 
+     * @return Página de creación de cuenta
+     */
+    @GetMapping("/crear-cuenta")
+    public String signIn() {
+        return "crear-cuenta";
     }
 }
-
