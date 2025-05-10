@@ -2,6 +2,8 @@ package es.upm.dit.isst.splitit.config;
 
 import javax.sql.DataSource;
 
+import es.upm.dit.isst.splitit.service.CustomOAuth2UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,6 +36,7 @@ public class SecurityConfig {
                 .permitAll())
             .oauth2Login(oauth -> oauth
                 .loginPage("/iniciar-sesion")
+                .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
                 .defaultSuccessUrl("/mi-espacio", true))
             .logout(logout -> logout
                 .logoutUrl("/logout")
@@ -59,4 +65,5 @@ public class SecurityConfig {
         return users;
     }
 }
+
 
