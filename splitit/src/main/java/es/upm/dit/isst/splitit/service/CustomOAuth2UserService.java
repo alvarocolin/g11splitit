@@ -3,6 +3,7 @@ package es.upm.dit.isst.splitit.service;
 import es.upm.dit.isst.splitit.model.Usuario;
 import es.upm.dit.isst.splitit.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -18,6 +19,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    @Lazy
     private PasswordEncoder passwordEncoder;
 
     @Override
