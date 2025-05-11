@@ -53,6 +53,8 @@
                                 <th>Fecha</th>
                                 <th>Añadido por</th>
                                 <th>Coste</th>
+                                <th>Acciones</th>
+                                <th>Coste</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,6 +63,7 @@
                                 <td th:text="${#dates.format(gasto.fecha, 'dd/MM/yyyy')}">Fecha</td>
                                 <td th:text="${gasto.pagador.nombre}">Usuario</td>
                                 <td><span th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')}">Coste</span> EUR</td>
+                                <td><a th:href="@{'/gastos/' + ${gasto.id} + '/editar'}">Editar</a></td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(gastos)}" style="height: 300px">
                                 <td colspan="4" class="text-center" style="line-height: 2">¡Vaya! Todavía no compartís ningún gasto. <br> Sólo tienes que hacer click en «Añadir gasto» para empezar.</td>

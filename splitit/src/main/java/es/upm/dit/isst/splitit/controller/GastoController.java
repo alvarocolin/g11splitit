@@ -29,13 +29,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.ui.Model;
 
 @Controller
 @RequestMapping("/gastos")
@@ -55,7 +56,8 @@ public class GastoController {
 
     @PostMapping("/crear")
     public String create(@RequestParam String concepto, @RequestParam double cantidad, @RequestParam Long grupoId,
-            @RequestParam Long pagadorId, @RequestParam Map<String, String> params, @RequestParam("recibo") MultipartFile recibo)
+            @RequestParam Long pagadorId, @RequestParam Map<String, String> params,
+            @RequestParam("recibo") MultipartFile recibo)
             throws IOException {
 
         validateInputs(concepto, cantidad, grupoId, pagadorId);
@@ -64,7 +66,8 @@ public class GastoController {
         Grupo grupo = grupoRepository.findById(grupoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
         Usuario pagador = usuarioRepository.findById(pagadorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));;
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        ;
 
         Gasto gasto = new Gasto();
         gasto.setConcepto(concepto);
@@ -130,7 +133,7 @@ public class GastoController {
     /**
      * Método para añadir participaciones a un gasto
      * 
-     * @param id ID del gasto
+     * @param id              ID del gasto
      * @param participaciones Lista de participaciones a añadir
      * @return
      */
@@ -173,8 +176,7 @@ public class GastoController {
                 .body(participacionRepository.findByGasto_Id(id)
                         .stream()
                         .map(Participacion::getUsuario)
-                        .toList()
-                );
+                        .toList());
     }
 
     /**
@@ -229,5 +231,49 @@ public class GastoController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no es una imagen");
             }
         }
+    }
+
+    /**
+     * Muestra el formulario para editar un gasto existente.
+     * 
+     * @param id    ID del gasto a editar
+     * @param model Modelo para pasar datos a la vista
+     * @return Página de edición del gasto
+     */
+    @GetMapping("/{id}/editar")
+    public String mostrarFormularioEditar(@PathVariable("id") Long id, Model model) {
+        Gasto gasto = gastoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gasto no encontrado"));
+        model.addAttribute("gasto", gasto);
+        return "editar-gasto"; // nombre del archivo HTML sin extensión
+    }
+
+    /**
+     * Procesa el formulario de edición de un gasto.
+     * 
+     * @param id       ID del gasto a editar
+     * @param concepto Nuevo concepto del gasto
+     * @param cantidad Nueva cantidad del gasto
+     * @param fecha    Nueva fecha del gasto
+     * @param recibo   Recibo asociado (opcional)
+     * @return Redirección al listado de gastos del grupo
+     */
+    @PostMapping("/{id}/editar")
+    public String procesarFormularioEditar(@PathVariable("id") Long id,
+            @RequestParam String concepto,
+            @RequestParam Double cantidad,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date fecha,
+            @RequestParam(required = false) String recibo) {
+
+        Gasto gasto = gastoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gasto no encontrado"));
+
+        gasto.setConcepto(concepto);
+        gasto.setCantidad(cantidad);
+        gasto.setFecha(fecha);
+        gasto.setRecibo(recibo);
+
+        gastoRepository.save(gasto);
+        return "redirect:/grupos/" + gasto.getGrupo().getId(); // redirige al grupo
     }
 }

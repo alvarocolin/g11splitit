@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base}">
+
+<head>
+  <title>Editar Gasto</title>
+  <th:block th:replace="layouts/base :: head"></th:block>
+</head>
+
+<body>
+  <th:block th:replace="layouts/base :: header"></th:block>
+
+  <section layout:fragment="content">
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <h2 class="mb-4">Editar Gasto</h2>
+          <form th:action="@{'/gastos/' + ${gasto.id} + '/editar'}" method="post">
+
+            <div class="mb-3">
+              <label for="concepto" class="form-label">Concepto</label>
+              <input type="text" class="form-control" id="concepto" name="concepto" th:value="${gasto.concepto}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="cantidad" class="form-label">Cantidad</label>
+              <input type="number" class="form-control" id="cantidad" name="cantidad" step="0.01" th:value="${gasto.cantidad}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="fecha" class="form-label">Fecha</label>
+              <input type="date" class="form-control" id="fecha" name="fecha"
+                     th:value="${#dates.format(gasto.fecha, 'yyyy-MM-dd')}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="recibo" class="form-label">Recibo</label>
+              <input type="text" class="form-control" id="recibo" name="recibo" th:value="${gasto.recibo}">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
+
+
+
