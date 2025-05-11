@@ -257,6 +257,35 @@ public class GrupoController {
         }
     }
 
+     /**
+     * Método para eliminar un usuario de grupo
+     * 
+     * @param user      Usuario a eliminar
+     * @param id        Grupo al que pertenece usuario
+     * @param principal Usuario que realiza la acción
+     * @return Grupo actualizado
+     */
+    @PostMapping("/{id}/remove-user")
+    public String removeUsuario(@RequestParam String usuarioEmail, @PathVariable("id") Long id, Principal principal) {
+        Grupo grupo = grupoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
+        if (grupo.getAdmin().getEmail().equals(principal.getName()) && !grupo.getSaldado()) {
+            Usuario usuario = usuarioRepository.findByEmail(usuarioEmail);
+            if (usuario == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+            } else if (!grupo.getMiembros().contains(usuario)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario no es miembro del grupo");
+            } else if (grupo.getAdmin().equals(usuario)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se puede eliminar al administrador del grupo");
+            }
+            grupo.getMiembros().removeIf(u -> u.getEmail().equals(usuarioEmail));
+            grupoRepository.save(grupo);
+            return "redirect:/grupos/" + id + "/editar";
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
     /**
      * Método para ver los detalles de un grupo
      * 
