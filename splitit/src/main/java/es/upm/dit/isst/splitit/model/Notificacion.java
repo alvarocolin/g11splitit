@@ -22,6 +22,12 @@ public class Notificacion {
     @Column(name = "leido", nullable = false)
     private Boolean leido = false;
 
+    @Column(name = "confirmando", nullable = false)
+    private Boolean confirmando = false;
+
+    @Column(name = "tipo", nullable = false)
+    private Integer tipo;
+
     @ManyToOne
     @JoinColumn(name = "usuario", nullable = false)
     private Usuario usuario;
@@ -29,9 +35,6 @@ public class Notificacion {
     @ManyToOne
     @JoinColumn(name = "pago")
     private Pago pago;
-
-    @Column(name = "grupo", nullable = false)
-    private String grupo;
 
     // CONSTRUCTOR
     public Notificacion() {
@@ -57,12 +60,31 @@ public class Notificacion {
     /**
      * @return true si la notificacion se ha leido y no se muestra como toast, false en caso contrario
      */
-    public Boolean getLeido() {
+    public Boolean isLeido() {
         return leido;
     }
 
     public void setLeido(Boolean leido) {
         this.leido = leido;
+    }
+
+    /**
+     * @return true si el usuario ha marcado una deuda como pagada para ser confirmado, false en caso contrario
+     */
+    public Boolean isConfirmando() {
+        return confirmando;
+    }
+
+    public void setConfirmando(Boolean confirmando) {
+        this.confirmando = confirmando;
+    }
+
+    public Integer getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(Integer tipo) {
+        this.tipo = tipo;
     }
 
     public Usuario getUsuario() {
@@ -79,14 +101,6 @@ public class Notificacion {
 
     public void setPago(Pago pago) {
         this.pago = pago;
-    }
-
-    public String getGrupo() {
-        return grupo;
-    }
-
-    public void setGrupo(String grupo) {
-        this.grupo = grupo;
     }
 
 }

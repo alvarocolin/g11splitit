@@ -17,12 +17,16 @@ import es.upm.dit.isst.splitit.repository.GrupoRepository;
 import es.upm.dit.isst.splitit.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -41,9 +45,16 @@ public class DashboardController {
 
     @GetMapping("/mi-espacio")
     @Transactional
-    public String dashboard(Model model, Principal principal) {
-        String email = principal.getName();
-        Usuario usuario = usuarioRepository.findByEmail(email);
+    public String dashboard(@AuthenticationPrincipal Object principal, Model model) {
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         List<Grupo> grupos = grupoRepository.findByMiembrosContaining(usuario);
         grupos.sort(Comparator.comparingLong(Grupo::getId).reversed());
@@ -66,9 +77,16 @@ public class DashboardController {
 
     @GetMapping("/mis-grupos")
     @Transactional
-    public String grupos(Model model, Principal principal) {
-        String email = principal.getName();
-        Usuario usuario = usuarioRepository.findByEmail(email);
+    public String grupos(@AuthenticationPrincipal Object principal, Model model) {
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         List<Grupo> grupos = grupoRepository.findByMiembrosContaining(usuario);
         grupos.sort(Comparator.comparingLong(Grupo::getId).reversed());
@@ -79,9 +97,16 @@ public class DashboardController {
     }
 
     @GetMapping("/mi-cuenta")
-    public String cuenta(Model model, Principal principal) {
-        String email = principal.getName();
-        Usuario usuario = usuarioRepository.findByEmail(email);
+    public String cuenta(@AuthenticationPrincipal Object principal, Model model) {
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         model.addAttribute("usuario", usuario);
         return "cuenta";

@@ -30,7 +30,7 @@ public class Pago {
     private Double cantidad;
 
     @Column(name = "estado", nullable = false)
-    private Boolean estado = false;
+    private Boolean pagado = false;
 
     @Column(name = "grupo", nullable = false)
     private String grupo;
@@ -68,12 +68,12 @@ public class Pago {
         this.cantidad = cantidad;
     }
 
-    public Boolean getEstado() {
-        return estado;
+    public Boolean isPagado() {
+        return pagado;
     }
 
-    public void setEstado(Boolean estado) {
-        this.estado = estado;
+    public void setPagado(Boolean pagado) {
+        this.pagado = pagado;
     }
 
     public String getGrupo() {

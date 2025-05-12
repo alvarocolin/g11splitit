@@ -17,35 +17,34 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
     http
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/crear-cuenta", "/crear-cuenta/confirmar").permitAll()
+            .requestMatchers("/", "/iniciar-sesion", "/crear-cuenta").permitAll()
             .requestMatchers("/css/**", "/js/**", "/img/**", "/fonts/**", "/uploads/**").permitAll()
-            .requestMatchers("/h2/**").permitAll() // permitir acceso a consola H2
             .requestMatchers("/grupos", "/pagos", "/usuarios").hasRole("ADMIN")
             .anyRequest().authenticated())
+        .oauth2Login(oauth -> oauth
+            .loginPage("/iniciar-sesion")
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(customOAuth2UserService)
+            )
+            .defaultSuccessUrl("/mi-espacio", true)
+        )
         .formLogin(form -> form
             .loginPage("/iniciar-sesion")
             .defaultSuccessUrl("/mi-espacio", true)
             .permitAll())
         .logout(logout -> logout
             .logoutUrl("/logout")
-            .logoutSuccessUrl("/iniciar-sesion?logout")
+            .clearAuthentication(true)
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .logoutSuccessUrl("/iniciar-sesion")
             .permitAll());
-
-    // Solo para H2: desactivar CSRF y frameOptions
-    http.csrf(csrf -> csrf
-            .ignoringRequestMatchers("/h2/**") // solo desactivar CSRF en /h2/**
-    );
-    http.headers(headers -> headers
-            .frameOptions(frame -> frame
-                .disable()) // permitir frames (necesario para consola H2)
-    );
 
     return http.build();
 }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

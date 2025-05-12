@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -64,7 +65,8 @@ public class UsuarioController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> getOne(@PathVariable("id") String id) {
-        Usuario usuario = usuarioRepository.findByEmail(id);
+        Usuario usuario = usuarioRepository.findByEmail(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
         return ResponseEntity.ok().body(usuario);
     }
 
@@ -97,7 +99,9 @@ public class UsuarioController {
      * @return Usuario actualizado
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<Usuario> partialUpdate(@ModelAttribute Usuario newUsuario, @PathVariable("id") Long id) {
+    public ResponseEntity<Usuario> partialUpdate(@RequestBody Usuario newUsuario, @PathVariable("id") Long id,
+            @RequestParam(required = false) String oldPassword, @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String repPassword) {
         return usuarioRepository.findById(id)
                 .map(usuario -> {
                     if (newUsuario.getNombre() != null) {
@@ -107,8 +111,38 @@ public class UsuarioController {
                         usuario.setEmail(newUsuario.getEmail());
                     }
                     if (newUsuario.getPassword() != null) {
-                        String encodedPassword = passwordEncoder.encode(newUsuario.getPassword());
+                        String encodedPassword = passwordEncoder.encode(newPassword);
                         usuario.setPassword(encodedPassword);
+                    }
+                    usuarioRepository.save(usuario);
+                    return ResponseEntity.ok(usuario);
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Método para actualizar parcialmente un usuario
+     * 
+     * @param newUsuario Usuario a actualizar
+     * @param id         ID del usuario a actualizar
+     * @return Usuario actualizado
+     */
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Usuario> updatePassword(@PathVariable("id") Long id, @RequestParam String oldPassword,
+            @RequestParam String newPassword, @RequestParam String repPassword) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    if (newPassword != null && oldPassword != null) {
+                        if (passwordEncoder.matches(oldPassword, usuario.getPassword())) {
+                            if (repPassword.equals(newPassword)) {
+                                String encodedPassword = passwordEncoder.encode(newPassword);
+                                usuario.setPassword(encodedPassword);
+                            } else {
+                                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva contraseña no coincide");
+                            }
+                        } else {
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña antigua no es correcta");
+                        }
                     }
                     usuarioRepository.save(usuario);
                     return ResponseEntity.ok(usuario);

@@ -182,7 +182,7 @@ tr td:nth-child(1) {
   width: 34%;
 }
 
-tr td:last-child {
+tr.gasto-row td:last-child {
   font-size: .75rem;
 }
 
@@ -246,6 +246,12 @@ th {
   transition: all .2s ease-in-out;
 }
 
+.btn-square {
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all .2s ease-in-out;
+}
+
 .modal .btn, .form .btn {
   padding: 6px 20px;
 }
@@ -283,7 +289,14 @@ th {
   color: var(--bs-emphasis-color);
 }
 
-.btn-white:hover {
+.btn-transparent {
+  background: transparent;
+  border: solid 1px transparent;
+  color: var(--bs-emphasis-color);
+  padding: 8px 14px;
+}
+
+.btn-white:hover, .btn-transparent:hover {
   border-color: var(--bs-emphasis-color);
 }
 
@@ -468,6 +481,16 @@ small.dropdown-item-text {
   height: 1.1rem;
   margin-right: 8px;
   margin-bottom: 4px;
+}
+
+.i-apple {
+  height: 1.25rem;
+  vertical-align: -4px;
+}
+
+.i-google {
+  height: 1.25rem;
+  vertical-align: -5px;
 }
 
 .header-link {

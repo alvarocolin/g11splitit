@@ -31,11 +31,17 @@ public class Usuario {
     @Email @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Column(name = "auth", nullable = false)
     private String auth;
+
+    private Boolean fromGoogle;
+
+    // CONSTRUCTORES
+    public Usuario() {
+    }
 
     // GETTERS Y SETTERS
     public Long getId() {
@@ -78,5 +84,14 @@ public class Usuario {
 
     public void setAuth(String auth) {
         this.auth = auth;
+    }
+
+    @JsonIgnore
+    public Boolean isFromGoogle() {
+        return fromGoogle;
+    }
+
+    public void setFromGoogle(Boolean fromGoogle) {
+        this.fromGoogle = fromGoogle;
     }
 }

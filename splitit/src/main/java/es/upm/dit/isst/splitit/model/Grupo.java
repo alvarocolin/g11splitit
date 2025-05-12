@@ -87,7 +87,7 @@ public class Grupo {
     /**
      * @return true si el grupo está saldado, false en caso contrario
      */
-    public Boolean getSaldado() {
+    public Boolean isSaldado() {
         return saldado;
     }
 

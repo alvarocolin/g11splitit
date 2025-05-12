@@ -9,9 +9,11 @@ import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
 public class NotificacionAdvice {
@@ -26,7 +28,8 @@ public class NotificacionAdvice {
     public void addNotificaciones(Model model, Principal principal) {
         if (principal != null) {
             String email = principal.getName();
-            Usuario usuario = usuarioRepository.findByEmail(email);
+            Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
             List<Notificacion> notificaciones = notificacionRepository.findByUsuario(usuario);
             List<Notificacion> toasts = notificacionRepository.findByUsuarioAndLeidoFalse(usuario);

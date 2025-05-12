@@ -1,0 +1,10 @@
+runtime: java17
+instance_class: F1
+entrypoint: java -jar target/splitit-0.0.1-SNAPSHOT.jar
+
+env_variables:
+  SPRING_PROFILES_ACTIVE: prod
+
+handlers:
+  - url: /.*
+    script: auto

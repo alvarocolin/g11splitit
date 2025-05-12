@@ -5,7 +5,9 @@ import es.upm.dit.isst.splitit.repository.UsuarioRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,7 +33,8 @@ public class RegistroUsuarioTest {
         usuarioRepository.save(u);
         System.out.println("✅ Usuario 'Juan' guardado en la base de datos");
 
-        Usuario guardado = usuarioRepository.findByEmail("juan@example.com");
+        Usuario guardado = usuarioRepository.findByEmail("juan@example.com")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         assertNotNull(guardado);
         System.out.println("🔍 Usuario encontrado por email");
@@ -90,7 +93,8 @@ public class RegistroUsuarioTest {
         usuarioRepository.save(u);
         System.out.println("✅ Usuario 'Lucía' registrado con contraseña cifrada");
 
-        Usuario recuperado = usuarioRepository.findByEmail(email);
+        Usuario recuperado = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
         assertNotNull(recuperado);
         System.out.println("🔍 Usuario 'Lucía' recuperado por email");
 
@@ -101,6 +105,3 @@ public class RegistroUsuarioTest {
         System.out.println("🎉 TEST testSimulacionInicioSesion COMPLETADO CON ÉXITO\n");
     }
 }
-
-
-

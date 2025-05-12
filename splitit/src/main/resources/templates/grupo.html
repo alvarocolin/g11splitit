@@ -42,7 +42,7 @@
                     <p class="mb-5" id="balance">Cargando deuda…</p>
                 </div>
             </div>
-            <div class="row">
+            <div class="row mb-5">
                 <!-- Gastos del grupo -->
                 <div class="col">
                     <h3 class="mb-4">Gastos del grupo</h3>
@@ -53,8 +53,6 @@
                                 <th>Fecha</th>
                                 <th>Añadido por</th>
                                 <th>Coste</th>
-                                <th>Acciones</th>
-                                <th>Coste</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,7 +61,6 @@
                                 <td th:text="${#dates.format(gasto.fecha, 'dd/MM/yyyy')}">Fecha</td>
                                 <td th:text="${gasto.pagador.nombre}">Usuario</td>
                                 <td><span th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')}">Coste</span> EUR</td>
-                                <td><a th:href="@{'/gastos/' + ${gasto.id} + '/editar'}">Editar</a></td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(gastos)}" style="height: 300px">
                                 <td colspan="4" class="text-center" style="line-height: 2">¡Vaya! Todavía no compartís ningún gasto. <br> Sólo tienes que hacer click en «Añadir gasto» para empezar.</td>
@@ -71,6 +68,29 @@
                         </tbody>
                     </table>
                     <p th:unless="${#lists.isEmpty(gastos)}" class="mt-3 ms-4" id="total">Cargando total…</p>
+                </div>
+            </div>
+            <div th:unless="${#lists.isEmpty(gastos)}" class="row">
+                <!-- Balances del grupo -->
+                <div class="col-12">
+                    <h3 class="mb-4">Balances del grupo</h3>
+                </div>
+                <div class="col-12">
+                    <table class="w-100">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Total debe</th>
+                                <th>Total le deben</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="balanceTableBody">
+                            <tr>
+                                <td colspan="4">Cargando balances…</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -178,6 +198,10 @@
                     <div id="modal-recibo"></div>
                     <h4 class="mt-4">Compartido entre</h4>
                     <ul class="list-unstyled ps-3" id="modal-participantes"></ul>
+                    <a href="/" class="btn btn-white mt-2 mb-3" id="modal-editar" th:if="${usuario.id == grupo.admin.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="i i-pen" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                            </svg>Editar gasto</a>
                 </div>
             </div>
         </div>
@@ -186,7 +210,7 @@
 
     <script th:unless="${#lists.isEmpty(toasts)}" th:replace="~{layouts/base::toasts-js}"></script>
 
-    <script>
+    <script th:unless="${grupo.saldado || usuario.id != grupo.admin.id}">
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("saldar-form").addEventListener("submit", function (e) {
                 e.preventDefault();
@@ -227,6 +251,9 @@
                     document.getElementById('modal-fecha').textContent = row.dataset.fecha;
                     document.getElementById('modal-pagador').textContent = row.dataset.pagador;
                     document.getElementById('modal-cantidad').textContent = row.dataset.cantidad;
+                    if (document.getElementById('modal-editar')) {
+                        document.getElementById('modal-editar').href = "/gastos/" + row.dataset.id + "/editar";
+                    }
                     fetch(`/gastos/${id}/recibo`)
                             .then(res => res.text())
                             .then(archivo => {
@@ -318,6 +345,7 @@
                 repartirEquitativamente();
             });
             document.getElementById('form').addEventListener('submit', function (e) {
+                repartirEquitativamente();
                 const cantidad = document.getElementById("cantidad");
                 cantidad.value = cantidad.value.replace(",", ".");
                 const checkboxes = document.querySelectorAll(".participacion-checkbox");
@@ -346,6 +374,7 @@
             document.getElementById('add-gasto').classList.add('disabled');
             document.getElementById('add-participante').classList.add('disabled');
             document.getElementById('saldar').classList.add('disabled');
+            document.getElementById('modal-editar').classList.add('disabled');
         });
         document.addEventListener('DOMContentLoaded', () => {
             const grupoId = [[${ grupo.id }]];
@@ -354,12 +383,40 @@
             fetch(`/grupos/${grupoId}/deuda?usuario=${usuarioId}`)
                     .then(res => res.json())
                     .then(deuda => {
-                        document.getElementById('balance').innerHTML = 'Le debes <strong>' + deuda.cantidad + '<span>EUR</span></strong> a <strong>' + deuda.receptor.nombre + '</strong>';
+                        showDeuda = Math.abs(deuda.cantidad);
+                        showDeuda = showDeuda.toFixed(2).replace('.', ',');
+                        document.getElementById('balance').innerHTML = 'Le debes <strong>' + showDeuda + '<span>EUR</span></strong> a <strong>' + deuda.receptor.nombre + '</strong>';
                     })
                     .catch(err => {
                         document.getElementById('balance').innerHTML = 'No debes nada :)';
                     });
         });
+    </script>
+    <script th:inline="javascript">
+        const id = [[${ grupo.id }]];
+
+        fetch(`/grupos/${id}/balances`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById("balanceTableBody");
+                tbody.innerHTML = "";
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                                <td>${item.usuario}</td>
+                                <td>${item.pagado.toFixed(2).replace('.', ',')} €</td>
+                                <td>${item.debe.toFixed(2).replace('.', ',')} €</td>
+                                <td class="${item.balance > 0 ? 'text-success' : item.balance < 0 ? 'text-danger' : 'text-secondary'}">
+                                    ${item.balance.toFixed(2).replace('.', ',')} €
+                                </td>`;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => {
+                document.getElementById("balanceTableBody").innerHTML =
+                    `<tr><td colspan="4" class="text-danger">Error al cargar balance.</td></tr>`;
+                console.error("Balance error:", err);
+            });
     </script>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

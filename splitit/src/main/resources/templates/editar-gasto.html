@@ -1,52 +1,100 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/base}">
-
-<head>
-  <title>Editar Gasto</title>
-  <th:block th:replace="layouts/base :: head"></th:block>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" data-bs-theme="light">
+<head th:replace="~{layouts/base::head}">
+    <meta charset="UTF-8">
 </head>
-
-<body>
-  <th:block th:replace="layouts/base :: header"></th:block>
-
-  <section layout:fragment="content">
-    <div class="container mt-5">
-      <div class="row justify-content-center">
-        <div class="col-md-8">
-          <h2 class="mb-4">Editar Gasto</h2>
-          <form th:action="@{'/gastos/' + ${gasto.id} + '/editar'}" method="post">
-
-            <div class="mb-3">
-              <label for="concepto" class="form-label">Concepto</label>
-              <input type="text" class="form-control" id="concepto" name="concepto" th:value="${gasto.concepto}" required>
+<body class="mb-5">
+    <header th:replace="~{layouts/base::header}"></header>
+    <main>
+        <div class="container mb-5 pt-4">
+            <div class="row">
+                <div class="col-12">
+                    <a th:href="@{/grupos/{id}(id=${gasto.grupo.id})}"><svg xmlns="http://www.w3.org/2000/svg"
+                            fill="currentColor" class="icon i-chevl" viewBox="0 0 16 16">
+                            <path
+                                d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
+                        </svg>Volver al grupo</a>
+                </div>
+                <!-- Título de la página -->
+                <div class="col-12 mt-5 mb-5">
+                    <h1 th:text="'Editar gasto: ' + ${gasto.concepto}" class="mb-4">Editar gasto</h1>
+                </div>
+                <div class="col-md-5">
+                    <form id="form" th:action="@{'/gastos/' + ${gasto.id}}" class="form" enctype="multipart/form-data">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <input type="hidden" th:name="grupoId" th:value="${gasto.grupo.id}" />
+                        <input type="hidden" th:name="pagadorId" th:value="${usuario.id}" />
+                        <div class="form-group mt-0">
+                            <label for="concepto" class="mb-2">Concepto</label>
+                            <input type="text" class="form-control" id="concepto" name="concepto" th:value="${gasto.concepto}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidad" class="mb-2">Coste (€)</label>
+                            <input type="text" class="form-control" id="cantidad" name="cantidad" th:value="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha" class="mb-2">Fecha</label>
+                            <input type="date" class="form-control" id="fecha" name="fecha" th:value="${#dates.format(gasto.fecha, 'yyyy-MM-dd')}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recibo" class="mb-2">Imagen del recibo (opcional)</label>
+                            <input type="file" class="form-control mt-2 mb-1" id="recibo" name="recibo" accept=".jpeg, .jpg, .png, .tiff">
+                            <small>Máximo 5 MB en formato .jpeg, .png o .tiff</small>
+                        </div>
+                        <div class="form-group">
+                            <a th:href="@{/grupos/{id}(id=${gasto.grupo.id})}" class="btn btn-white">Cancelar</a>
+                            <button type="submit" class="btn btn-black">Actualizar</button>
+                        </div>
+                    </form>
+                </div>
+                <div th:if="${gasto.recibo != null}" class="col-md-2"></div>
+                <div th:if="${gasto.recibo != null}" class="col-md-3">
+                    <p class="mb-2">Imagen actual del recibo:</p>
+                    <img th:src="'/uploads/' + ${gasto.recibo}" alt="Imagen del recibo" class="img rounded w-100">
+                </div>
             </div>
-
-            <div class="mb-3">
-              <label for="cantidad" class="form-label">Cantidad</label>
-              <input type="number" class="form-control" id="cantidad" name="cantidad" step="0.01" th:value="${gasto.cantidad}" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="fecha" class="form-label">Fecha</label>
-              <input type="date" class="form-control" id="fecha" name="fecha"
-                     th:value="${#dates.format(gasto.fecha, 'yyyy-MM-dd')}" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="recibo" class="form-label">Recibo</label>
-              <input type="text" class="form-control" id="recibo" name="recibo" th:value="${gasto.recibo}">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-          </form>
         </div>
-      </div>
-    </div>
-  </section>
+    </main>
+    <div th:unless="${#lists.isEmpty(toasts)}" th:replace="~{layouts/base::toasts}"></div>
+
+    <script th:unless="${#lists.isEmpty(toasts)}" th:replace="~{layouts/base::toasts-js}"></script>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const nombreGrupo = [[${ gasto.grupo.nombre }]];
+            document.getElementsByTagName("title").item(0).innerHTML = "Editar gasto - " + nombreGrupo + " - split.it";
+        });
+    </script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("form").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const cantidad = document.getElementById("cantidad");
+                cantidad.value = cantidad.value.replace(",", ".");
+                const formData = new FormData(this);
+                const csrfToken = formData.get('_csrf');
+                fetch(this.action, {
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(res => {
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Error al actualizar el gasto");
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
-
-
-

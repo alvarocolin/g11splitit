@@ -9,16 +9,20 @@
 
 package es.upm.dit.isst.splitit.controller;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -78,8 +82,16 @@ public class GrupoController {
      * @return Grupo creado
      */
     @PostMapping("/crear")
-    public String create(@ModelAttribute Grupo grupo, Principal principal) {
-        Usuario usuario = usuarioRepository.findByEmail(principal.getName());
+    public String create(@ModelAttribute Grupo grupo, @AuthenticationPrincipal Object principal) {
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
         if (grupo.getMiembros() == null) {
             grupo.setMiembros(new HashSet<>());
         }
@@ -100,15 +112,24 @@ public class GrupoController {
      * @return Grupo encontrado
      */
     @GetMapping("/{id}")
-    public String getOne(@PathVariable("id") Long id, Model model, Principal principal) {
+    @Transactional
+    public String getOne(@PathVariable("id") Long id, Model model, @AuthenticationPrincipal Object principal) {
         Grupo grupo = grupoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
 
-        if (grupo.getMiembros().stream().noneMatch(usuario -> usuario.getEmail().equals(principal.getName()))) {
+        String userEmail = null;
+        if (principal instanceof OAuth2User) {
+            userEmail = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            userEmail = ((UserDetails) principal).getUsername();
+        }
+        final String email = userEmail;
+        if (grupo.getMiembros().stream().noneMatch(usuario -> usuario.getEmail().equals(email))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         } else {
             List<?> gastos = gastoRepository.findByGrupo(grupo);
-            Usuario usuario = usuarioRepository.findByEmail(principal.getName());
+            Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
             model.addAttribute("grupo", grupo);
             model.addAttribute("gastos", gastos);
@@ -128,10 +149,16 @@ public class GrupoController {
      */
     @PutMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<Grupo> update(@RequestBody Grupo newGrupo, @PathVariable("id") Long id, Principal principal) {
+    public ResponseEntity<Grupo> update(@RequestBody Grupo newGrupo, @PathVariable("id") Long id, @AuthenticationPrincipal Object principal) {
         return grupoRepository.findById(id)
                 .map(grupo -> {
-                    if (grupo.getAdmin().getEmail().equals(principal.getName())) {
+                    String email = null;
+                    if (principal instanceof OAuth2User) {
+                        email = ((OAuth2User) principal).getAttribute("email");
+                    } else if (principal instanceof UserDetails) {
+                        email = ((UserDetails) principal).getUsername();
+                    }
+                    if (grupo.getAdmin().getEmail().equals(email)) {
                         grupo.setNombre(newGrupo.getNombre());
                         grupo.setMiembros(newGrupo.getMiembros());
                         grupoRepository.save(grupo);
@@ -154,18 +181,24 @@ public class GrupoController {
     @PatchMapping("/{id}")
     @ResponseBody
     public ResponseEntity<Grupo> partialUpdate(@RequestBody Grupo newGrupo, @PathVariable("id") Long id,
-            Principal principal) {
+            @AuthenticationPrincipal Object principal) {
         return grupoRepository.findById(id)
                 .map(grupo -> {
-                    if (grupo.getAdmin().getEmail().equals(principal.getName())) {
+                    String email = null;
+                    if (principal instanceof OAuth2User) {
+                        email = ((OAuth2User) principal).getAttribute("email");
+                    } else if (principal instanceof UserDetails) {
+                        email = ((UserDetails) principal).getUsername();
+                    }
+                    if (grupo.getAdmin().getEmail().equals(email)) {
                         if (newGrupo.getNombre() != null) {
                             grupo.setNombre(newGrupo.getNombre());
                         }
                         if (newGrupo.getMiembros() != null) {
                             grupo.setMiembros(newGrupo.getMiembros());
                         }
-                        if (newGrupo.getSaldado() != null) {
-                            grupo.setSaldado(newGrupo.getSaldado());
+                        if (newGrupo.isSaldado() != null) {
+                            grupo.setSaldado(newGrupo.isSaldado());
                         }
                         grupoRepository.save(grupo);
                         return ResponseEntity.ok().body(grupo);
@@ -201,13 +234,19 @@ public class GrupoController {
      */
     @PutMapping("/{id}/saldar")
     @ResponseBody @Transactional
-    public ResponseEntity<?> saldarGrupo(@PathVariable("id") Long id, Principal principal) {
+    public ResponseEntity<?> saldarGrupo(@PathVariable("id") Long id, @AuthenticationPrincipal Object principal) {
         Grupo grupo = grupoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
-        if (grupo.getSaldado()) {
+        if (grupo.isSaldado()) {
             throw new IllegalStateException("El grupo ya está saldado");
         }
-        if (grupo.getAdmin().getEmail().equals(principal.getName())) {
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+        if (grupo.getAdmin().getEmail().equals(email)) {
             List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
             List<Pago> pagos = generatePagosGrupo(gastosGrupo);
 
@@ -215,7 +254,8 @@ public class GrupoController {
                 Notificacion n = new Notificacion();
                 n.setMensaje("Le debes <strong>" + String.format("%.2f", pago.getCantidad()).replace('.', ',') + "€</strong> a <strong>" + pago.getReceptor().getNombre() + "</strong>");
                 n.setUsuario(pago.getEmisor());
-                n.setGrupo(grupo.getNombre());
+                n.setPago(pago);
+                n.setTipo(1);
                 notificacionRepository.save(n);
                 pago.setGrupo(grupo.getNombre());
             }
@@ -239,11 +279,18 @@ public class GrupoController {
      * @return Grupo actualizado
      */
     @PostMapping("/{id}/add-user")
-    public String addUsuario(@RequestParam String usuarioEmail, @PathVariable("id") Long id, Principal principal) {
+    public String addUsuarioToGrupo(@RequestParam String usuarioEmail, @PathVariable("id") Long id, @AuthenticationPrincipal Object principal) {
         Grupo grupo = grupoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
-        if (grupo.getAdmin().getEmail().equals(principal.getName()) && !grupo.getSaldado()) {
-            Usuario usuario = usuarioRepository.findByEmail(usuarioEmail);
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+        if (grupo.getAdmin().getEmail().equals(email) && !grupo.isSaldado()) {
+            Usuario usuario = usuarioRepository.findByEmail(usuarioEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
             if (usuario == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
             } else if (grupo.getMiembros().contains(usuario)) {
@@ -257,20 +304,27 @@ public class GrupoController {
         }
     }
 
-     /**
-     * Método para eliminar un usuario de grupo
+    /**
+     * Método para eliminar un usuario de un grupo
      * 
-     * @param user      Usuario a eliminar
-     * @param id        Grupo al que pertenece usuario
+     * @param user      Participante a eliminar
+     * @param id        Grupo del que se elimina el usuario
      * @param principal Usuario que realiza la acción
      * @return Grupo actualizado
      */
     @PostMapping("/{id}/remove-user")
-    public String removeUsuario(@RequestParam String usuarioEmail, @PathVariable("id") Long id, Principal principal) {
+    public String removeUsuarioFromGrupo(@RequestParam String usuarioEmail, @PathVariable("id") Long id, @AuthenticationPrincipal Object principal) {
         Grupo grupo = grupoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
-        if (grupo.getAdmin().getEmail().equals(principal.getName()) && !grupo.getSaldado()) {
-            Usuario usuario = usuarioRepository.findByEmail(usuarioEmail);
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+        if (grupo.getAdmin().getEmail().equals(email) && !grupo.isSaldado()) {
+            Usuario usuario = usuarioRepository.findByEmail(usuarioEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
             if (usuario == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
             } else if (!grupo.getMiembros().contains(usuario)) {
@@ -295,10 +349,17 @@ public class GrupoController {
      * @return Página de detalles del grupo
      */
     @GetMapping("/{id}/editar")
-    public String getDetalles(@PathVariable("id") Long id, Model model, Principal principal) {
+    public String getDetalles(@PathVariable("id") Long id, Model model, @AuthenticationPrincipal Object principal) {
         Grupo grupo = grupoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
-        Usuario usuario = usuarioRepository.findByEmail(principal.getName());
+        String email = null;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        }
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
         model.addAttribute("grupo", grupo);
         model.addAttribute("usuario", usuario);
         return "editar-grupo";
@@ -339,6 +400,69 @@ public class GrupoController {
             }
         }
         return ResponseEntity.ok().body(totalLeDeben - totalDebe);
+    }
+
+    /**
+     * Método para obtener el balance de los usuarios de un grupo
+     * 
+     * @param id ID del grupo
+     * @return Balance del usuario en el grupo
+     */
+    @GetMapping("/{id}/balances")
+    public ResponseEntity<?> getBalancesGrupo(@PathVariable("id") Long id) {
+        Grupo grupo = grupoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grupo no encontrado"));
+
+        List<Gasto> gastosGrupo = gastoRepository.findByGrupo(grupo);
+
+        Map<Long, Double> totalDebePorUsuario = new HashMap<>(); // Lo que debe cada uno
+        Map<Long, Double> totalLeDebenAlUsuario = new HashMap<>(); // Lo que le deben a cada uno
+
+        for (Gasto gasto : gastosGrupo) {
+            Long idPagador = gasto.getPagador().getId();
+            List<Participacion> participaciones = participacionRepository.findByGasto_Id(gasto.getId());
+
+            for (Participacion p : participaciones) {
+                Long idParticipante = p.getUsuario().getId();
+                double cantidad = p.getCantidad();
+
+                if (!idParticipante.equals(idPagador)) {
+                    // Lo que debe el participante
+                    totalDebePorUsuario.put(idParticipante,
+                            totalDebePorUsuario.getOrDefault(idParticipante, 0.0) + cantidad);
+
+                    // Lo que le deben al pagador
+                    totalLeDebenAlUsuario.put(idPagador,
+                            totalLeDebenAlUsuario.getOrDefault(idPagador, 0.0) + cantidad);
+                }
+            }
+        }
+
+        Set<Long> usuarios = new HashSet<>();
+        usuarios.addAll(totalDebePorUsuario.keySet());
+        usuarios.addAll(totalLeDebenAlUsuario.keySet());
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Long idUsuario : usuarios) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+            if (usuarioOpt.isPresent()) {
+                Usuario usuario = usuarioOpt.get();
+                double leDeben = totalLeDebenAlUsuario.getOrDefault(idUsuario, 0.0);
+                double debe = totalDebePorUsuario.getOrDefault(idUsuario, 0.0);
+                double balance = leDeben - debe;
+
+                Map<String, Object> datoUsuario = new HashMap<>();
+                datoUsuario.put("usuario", usuario.getNombre());
+                datoUsuario.put("pagado", leDeben); // opcional: cambiar el nombre a "le deben"
+                datoUsuario.put("debe", debe);
+                datoUsuario.put("balance", balance);
+
+                resultado.add(datoUsuario);
+            }
+        }
+
+        return ResponseEntity.ok(resultado);
     }
 
     /**

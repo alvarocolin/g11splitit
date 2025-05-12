@@ -41,7 +41,7 @@
                                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                                         </svg>
                                         <h5 class="card-title">Crear nuevo grupo</h5>
-                                        <button type="button" data-bs-toggle="modal" data-bs-target="#grupo" class="stretched-link"></button>
+                                        <a type="button" data-bs-toggle="modal" data-bs-target="#grupo" class="stretched-link"></a>
                                     </div>
                                 </div>
                             </div>
@@ -56,8 +56,8 @@
                     <h3 class="pb-2">Últimos movimientos</h3>
                     <table class="w-100 mt-4 bg-white">
                         <tr th:each="gasto : ${gastos}" th:attr="onclick=|window.location='/grupos/${gasto.grupo.id}'|">
-                            <td th:text="${#dates.format(gasto.fecha, 'dd/MM')}" style="width: 30%;">Fecha</td>
-                            <td th:text="${gasto.grupo.nombre}" style="width: 40%;">Grupo</td>
+                            <td th:text="${#dates.format(gasto.fecha, 'dd/MM')}" style="width: 25%;">Fecha</td>
+                            <td th:text="${gasto.grupo.nombre}" style="width: 35%;">Grupo</td>
                             <td><span th:text="${#numbers.formatDecimal(gasto.cantidad, 1, 2, 'COMMA')}">Coste</span> EUR</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(gastos)}" style="height: 175px">

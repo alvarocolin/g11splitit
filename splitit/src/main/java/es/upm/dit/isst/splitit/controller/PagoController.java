@@ -105,8 +105,8 @@ public class PagoController {
                     if (newPago.getCantidad() != null) {
                         pago.setCantidad(newPago.getCantidad());
                     }
-                    if (newPago.getEstado() != null) {
-                        pago.setEstado(newPago.getEstado());
+                    if (newPago.isPagado() != null) {
+                        pago.setPagado(newPago.isPagado());
                     }
                     if (newPago.getGrupo() != null) {
                         pago.setGrupo(newPago.getGrupo());
